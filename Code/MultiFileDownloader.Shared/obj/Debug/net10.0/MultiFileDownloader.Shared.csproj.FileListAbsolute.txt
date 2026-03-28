@@ -1,0 +1,11 @@
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\bin\Debug\net10.0\MultiFileDownloader.Shared.deps.json
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\bin\Debug\net10.0\MultiFileDownloader.Shared.dll
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\bin\Debug\net10.0\MultiFileDownloader.Shared.pdb
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.AssemblyInfoInputs.cache
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.AssemblyInfo.cs
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.csproj.CoreCompileInputs.cache
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.dll
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\refint\MultiFileDownloader.Shared.dll
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\MultiFileDownloader.Shared.pdb
+D:\Dev\UTH\LtrMang\Test NP_NetGroup11_UDM12\MultiFileDownloader\MultiFileDownloader.Shared\obj\Debug\net10.0\ref\MultiFileDownloader.Shared.dll

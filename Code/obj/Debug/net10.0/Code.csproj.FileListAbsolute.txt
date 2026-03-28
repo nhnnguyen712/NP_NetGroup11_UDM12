@@ -1,0 +1,15 @@
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\bin\Debug\net10.0\Code.exe
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\bin\Debug\net10.0\Code.deps.json
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\bin\Debug\net10.0\Code.runtimeconfig.json
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\bin\Debug\net10.0\Code.dll
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\bin\Debug\net10.0\Code.pdb
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.AssemblyInfoInputs.cache
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.AssemblyInfo.cs
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.csproj.CoreCompileInputs.cache
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.sourcelink.json
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.dll
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\refint\Code.dll
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.pdb
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\Code.genruntimeconfig.cache
+C:\Users\NGUYEN\NP_NetGroup11_UDM12\Code\obj\Debug\net10.0\ref\Code.dll

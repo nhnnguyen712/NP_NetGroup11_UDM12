@@ -13,44 +13,46 @@ namespace MultiFileDownloader.Client
         {
             InitializeComponent();
 
-            // fake dữ liệu server
-            lstServerFiles.Items.Add("file1.zip");
-            lstServerFiles.Items.Add("video.mp4");
-            lstServerFiles.Items.Add("music.mp3");
-
             Downloads = new ObservableCollection<DownloadItem>();
-            lstDownloads.ItemsSource = Downloads;
+            DataContext = this;
+
+            // 🔥 THÊM DÒNG NÀY (QUAN TRỌNG NHẤT)
+            var testItem = new DownloadItem("test.pdf");
+            Downloads.Add(testItem);
+            testItem.StartDownload();
+
+            // Fake server files
+            lstServerFiles.Items.Add("📄 Document.pdf");
+            lstServerFiles.Items.Add("🎬 Video.mp4");
+            lstServerFiles.Items.Add("🎵 Music.mp3");
         }
 
-        // kéo file
         private void lstServerFiles_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                var listBox = sender as ListBox;
-                var item = listBox.SelectedItem;
-
-                if (item != null)
+                if (sender is ListBox listBox && listBox.SelectedItem != null)
                 {
-                    DragDrop.DoDragDrop(listBox, item.ToString(), DragDropEffects.Copy);
+                    DragDrop.DoDragDrop(
+                        listBox,
+                        listBox.SelectedItem.ToString(),
+                        DragDropEffects.Copy
+                    );
                 }
             }
         }
 
-        // thả file
         private void Grid_Drop(object sender, DragEventArgs e)
         {
-            string file = e.Data.GetData(typeof(string)) as string;
+            string fileName = e.Data.GetData(typeof(string)) as string;
 
-            if (file != null)
+            if (!string.IsNullOrEmpty(fileName))
             {
-                Downloads.Add(new DownloadItem
-                {
-                    FileName = file,
-                    Progress = 0,
-                    Speed = 0,
-                    Status = "Waiting"
-                });
+                var item = new DownloadItem(fileName);
+
+                Downloads.Add(item);
+
+                item.StartDownload();
             }
         }
     }

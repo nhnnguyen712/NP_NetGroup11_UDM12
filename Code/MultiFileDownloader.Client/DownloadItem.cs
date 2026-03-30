@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -7,9 +8,10 @@ namespace MultiFileDownloader.Client
 {
     public class DownloadItem : INotifyPropertyChanged
     {
-        public string FileName { get; set; }
+        // Tên file (ReadOnly)
+        public string FileName { get; }
 
-        // ===== PROGRESS =====
+        // ===== PROGRESS (0-100) =====
         private int _progress;
         public int Progress
         {
@@ -17,7 +19,7 @@ namespace MultiFileDownloader.Client
             set { _progress = value; OnPropertyChanged(); }
         }
 
-        // ===== SPEED =====
+        // ===== SPEED (MB/s hoặc KB/s) =====
         private double _speed;
         public double Speed
         {
@@ -25,7 +27,7 @@ namespace MultiFileDownloader.Client
             set { _speed = value; OnPropertyChanged(); }
         }
 
-        // ===== STATUS =====
+        // ===== STATUS (Downloading, Paused, Completed, Error) =====
         private string _status = "Downloading...";
         public string Status
         {
@@ -38,49 +40,69 @@ namespace MultiFileDownloader.Client
         public bool IsCompleted
         {
             get => _isCompleted;
-            set { _isCompleted = value; OnPropertyChanged(); }
+            set 
+            { 
+                _isCompleted = value; 
+                if (value) Status = "Completed";
+                OnPropertyChanged(); 
+            }
         }
 
-        // ===== PAUSE =====
+        // ===== PAUSE/RESUME LOGIC =====
         private bool _isPaused;
         public bool IsPaused
         {
             get => _isPaused;
             set
             {
-                _isPaused = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(PauseText));
+                if (_isPaused != value)
+                {
+                    _isPaused = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PauseText));
+                    
+                    if (!IsCompleted) 
+                        Status = _isPaused ? "Paused" : "Downloading...";
+                }
             }
         }
 
-        // Text hiển thị nút
+        // Text hiển thị trên nút bấm
         public string PauseText => IsPaused ? "Resume" : "Pause";
 
-        // Token
-        public CancellationTokenSource Cts { get; set; }
+        // Token để quản lý việc hủy/tạm dừng Task
+        // Sử dụng dấu ? để tránh cảnh báo CS8618 (Nullability)
+        public CancellationTokenSource? Cts { get; set; }
 
-        // Command
+        // Command cho nút bấm
         public ICommand TogglePauseCommand { get; }
 
         public DownloadItem(string name)
         {
             FileName = name;
             Cts = new CancellationTokenSource();
-
+            
+            // Khởi tạo command thông qua RelayCommand
             TogglePauseCommand = new RelayCommand(TogglePause);
         }
 
         private void TogglePause()
         {
+            if (IsCompleted) return;
             IsPaused = !IsPaused;
-            Status = IsPaused ? "Paused" : "Downloading...";
+
+            // Nếu người dùng nhấn Pause, chúng ta hủy Token hiện tại
+            if (IsPaused)
+            {
+                Cts?.Cancel();
+            }
         }
 
-        // ===== NOTIFY UI =====
-        public event PropertyChangedEventHandler PropertyChanged;
+        // ===== NOTIFY UI (Sửa lỗi Warning CS8612) =====
+        // Thêm dấu ? vào PropertyChangedEventHandler để khớp với định nghĩa của .NET mới
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

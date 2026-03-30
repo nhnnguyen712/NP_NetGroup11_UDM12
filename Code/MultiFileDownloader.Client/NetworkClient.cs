@@ -6,13 +6,14 @@ namespace MultiFileDownloader.Client
 {
     public class NetworkClient
     {
+        private static readonly Random rnd = new Random();
+
         // NÂNG CẤP: Thêm cơ chế xử lý lỗi (Exception Handling)
         public async Task<List<string>> GetFileList()
         {
             try
             {
                 // Giả lập thời gian phản hồi từ Server (500ms - 1500ms)
-                Random rnd = new Random();
                 await Task.Delay(rnd.Next(500, 1500));
 
                 // Giả lập trường hợp lỗi kết nối (ví dụ: 10% khả năng lỗi)
@@ -30,7 +31,7 @@ namespace MultiFileDownloader.Client
             catch (Exception ex)
             {
                 // Truyền lỗi ra ngoài để UI hiển thị thông báo đẹp cho người dùng
-                throw new Exception("Lỗi danh sách: " + ex.Message);
+                throw new Exception("Lỗi kết nối Server: " + ex.Message);
             }
         }
     }

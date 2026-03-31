@@ -113,7 +113,6 @@ public class NetworkClient
         }
     }
 
-    // ================== HELPER ==================
 
     private void SendPacket(byte command, byte[] payload)
     {

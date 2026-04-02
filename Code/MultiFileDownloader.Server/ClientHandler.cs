@@ -1,57 +1,52 @@
 using System;
-using System.Net.Sockets;
+using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
+using System.Net.Sockets;
+using MultiFileDownloader.Shared;
 
-public class ClientHandler
+namespace MultiFileDownloader.Server
 {
-    public static async Task Handle(TcpClient client)
+    public static class ClientHandler
     {
-        NetworkStream stream = client.GetStream();
+        static string root = Path.GetFullPath("files");
 
-        try
+        public static async Task Handle(TcpClient client)
         {
-            while (true)
+            try
             {
-                // đọc 5 byte header
-                byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
+                NetworkStream stream = client.GetStream();
 
-                // lấy command
-                Command cmd = (Command)header[0];
-
-                // lấy length
-                int length = PacketHelper.ParseLength(header);
-
-                // đọc payload
-                byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
-
-                Console.WriteLine($"Client: {client.Client.RemoteEndPoint} | CMD: {cmd} | LEN: {length}");
-
-                // xử lý lệnh
-                switch (cmd)
+                while (true)
                 {
-                    case Command.RequestFileList:
-                        Console.WriteLine("Client yêu cầu danh sách file");
-                        break;
+                    byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
 
-                    case Command.RequestDownload:
-                        string fileName = Encoding.UTF8.GetString(payload);
-                        Console.WriteLine("Client muốn tải: " + fileName);
-                        break;
+                    Command cmd = (Command)header[0];
 
-                    default:
-                        Console.WriteLine("Unknown command");
-                        break;
+                    int length = PacketHelper.ParseLength(header);
+
+                    byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
+
+                    switch (cmd)
+                    {
+                        case Command.RequestFileList:
+                            await FileService.SendFileList(stream);
+                            break;
+
+                        case Command.RequestDownload:
+                            string file = Encoding.UTF8.GetString(payload);
+                            await FileService.SendFile(stream, file);
+                            break;
+                    }
                 }
             }
-        }
-        catch (Exception)
-        {
-            Console.WriteLine("Client disconnected");
-        }
-        finally
-        {
-            client.Close();
+            catch (Exception ex)
+            {
+                Console.WriteLine("Client disconnected: " + ex.Message);
+            }
+            finally
+            {
+                client.Close();
+            }
         }
     }
 }

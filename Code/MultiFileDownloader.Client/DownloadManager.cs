@@ -1,52 +1,46 @@
-    using System;
-    using System.Threading.Tasks;
-    using System.Threading;
+using MultiFileDownloader.Shared;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Sockets;
+using System.Text;
 
-    namespace MultiFileDownloader.Client
+namespace MultiFileDownloader.Client
+{
+    public class DownloadManager
     {
-        public class DownloadManager
+        public async Task Download(NetworkStream stream, string file)
         {
-            private static readonly Random rnd = new Random();
+            string downloadFolder = Path.Combine(AppContext.BaseDirectory, "Downloads");
 
-            public async Task DownloadFile(
-                string fileName,
-                IProgress<int> progressReporter,
-                IProgress<double> speedReporter,
-                CancellationToken token,
-                int startProgress = 0)
+            if (!Directory.Exists(downloadFolder))
+                Directory.CreateDirectory(downloadFolder);
+
+            string fullPath = Path.Combine(downloadFolder, file);
+
+            using FileStream fs = new FileStream(fullPath, FileMode.Create);
+            
+
+            while (true)
             {
-                try
+                byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
+
+                Command cmd = (Command)header[0];
+
+                int length = PacketHelper.ParseLength(header);
+
+                byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
+
+                if (cmd == Command.SendFileChunk)
                 {
-                    // Bắt đầu từ vị trí hiện tại (phục vụ Resume)
-                    for (int i = startProgress; i <= 100; i++)
-                    {
-                        // Kiểm tra token liên tục để dừng ngay khi nhấn Pause
-                        token.ThrowIfCancellationRequested();
-
-                        // Giả lập thời gian tải (300ms mỗi 1%)
-                        // Truyền token vào Task.Delay để dừng chờ ngay lập tức
-                        await Task.Delay(200, token);
-
-                        // Gửi dữ liệu về UI thông qua IProgress
-                        progressReporter?.Report(i);
-
-                        // Giả lập tốc độ tải biến thiên
-                        double currentSpeed = rnd.NextDouble() * (5.5 - 1.2) + 1.2; // Từ 1.2 đến 5.5 MB/s
-                        speedReporter?.Report(Math.Round(currentSpeed, 1));
-                    }
+                    await fs.WriteAsync(payload);
                 }
-                catch (OperationCanceledException)
+
+                if (cmd == Command.DownloadComplete)
                 {
-                    // Khi nhấn Pause, token sẽ throw lỗi này. 
-                    // Chúng ta catch ở đây để Task kết thúc trong êm đẹp.
-                    speedReporter?.Report(0); // Reset tốc độ về 0 khi dừng
-                }
-                catch (Exception ex)
-                {
-                    // Các lỗi mạng khác nếu có
-                    Console.WriteLine($"Lỗi tải file {fileName}: {ex.Message}");
-                    throw;
+                    break;
                 }
             }
         }
     }
+}

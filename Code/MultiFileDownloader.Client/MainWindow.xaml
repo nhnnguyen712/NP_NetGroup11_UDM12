@@ -1,149 +1,36 @@
-﻿<Window x:Class="MultiFileDownloader.Client.MainWindow"
+<Window x:Class="MultiFileDownloader.Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MultiFileDownloader.Client"
         mc:Ignorable="d"
-        Title="Multi File Downloader - Pro Version" 
-        Height="650" Width="1050"
-        Background="{StaticResource BackgroundBrush}"
-        WindowStartupLocation="CenterScreen">
+        Title="Multi File Downloader" Height="400" Width="500">
 
-    <Grid Margin="20">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320"/>
-            <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+    <Grid>
 
-        <Border Grid.Column="0" 
-                Background="{StaticResource SecondaryBrush}" 
-                CornerRadius="15" 
-                Margin="0,0,10,0" 
-                Padding="15">
-            <DockPanel>
-                <TextBlock Text="Files on Server" 
-                           DockPanel.Dock="Top" 
-                           Foreground="{StaticResource TextBrush}" 
-                           FontSize="20" FontWeight="Bold" 
-                           Margin="0,0,0,15"/>
+        <ListBox x:Name="fileList"
+                 Margin="10,10,10,80"/>
 
-                <ListBox x:Name="lstServerFiles" 
-                         Background="Transparent" 
-                         BorderThickness="0"
-                         Foreground="{StaticResource TextBrush}" 
-                         FontSize="14"
-                         PreviewMouseMove="lstServerFiles_PreviewMouseMove">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="12,10"/>
-                            <Setter Property="Margin" Value="0,2"/>
-                            <Setter Property="Background" Value="#252525"/>
-                            <Style.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="8"/>
-                                </Style>
-                            </Style.Resources>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-            </DockPanel>
-        </Border>
+        <Button Content="Load Files"
+                Click="LoadFiles_Click"
+                Height="30"
+                Width="100"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Left"
+                Margin="10,0,0,40"/>
 
-        <Border Grid.Column="1" 
-                Background="{StaticResource SecondaryBrush}" 
-                CornerRadius="15" 
-                Margin="10,0,0,0" 
-                Padding="15">
-            <DockPanel>
-                <TextBlock Text="Download Queue" 
-                           DockPanel.Dock="Top" 
-                           Foreground="{StaticResource TextBrush}" 
-                           FontSize="20" FontWeight="Bold" 
-                           Margin="0,0,0,5"/>
-                
-                <TextBlock Text="Drag and drop files from the left to start downloading" 
-                           DockPanel.Dock="Top" 
-                           Foreground="{StaticResource SubTextBrush}" 
-                           FontSize="12" 
-                           Margin="0,0,0,20"/>
+        <Button Content="Download"
+                Click="Download_Click"
+                Height="30"
+                Width="100"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Left"
+                Margin="120,0,0,40"/>
 
-                <Grid AllowDrop="True" Drop="Grid_Drop" Background="Transparent">
-                    <ListView x:Name="lstDownloads" 
-                              ItemsSource="{Binding Downloads}" 
-                              Background="Transparent" 
-                              BorderThickness="0"
-                              HorizontalContentAlignment="Stretch"
-                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                <Setter Property="Margin" Value="0,0,0,10"/>
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListViewItem">
-                                            <ContentPresenter />
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListView.ItemContainerStyle>
+        <ProgressBar x:Name="progressBar"
+                     Height="20"
+                     Margin="10,0,10,10"
+                     VerticalAlignment="Bottom"/>
 
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="#2A2A2A" CornerRadius="12" Padding="15">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <StackPanel Orientation="Horizontal" Grid.Row="0">
-                                            <TextBlock Text="{Binding FileName}" 
-                                                       Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <TextBlock Text="{Binding Speed, StringFormat={}{0:F1} MB/s}" 
-                                                       Foreground="{StaticResource PrimaryBrush}" 
-                                                       VerticalAlignment="Center" Margin="0,0,15,0"/>
-                                            <Button Command="{Binding TogglePauseCommand}" 
-                                                    Content="{Binding PauseText}"
-                                                    Width="80" Height="30"
-                                                    Background="{Binding IsPaused, Converter={StaticResource StatusToColorConverter}}"
-                                                    Visibility="{Binding IsCompleted, Converter={StaticResource InverseVisibilityConverter}}"/>
-
-                                        </StackPanel>
-                                   <ProgressBar Grid.Row="1" 
-                                            Grid.ColumnSpan="2" 
-                                            Height="8" 
-                                            Margin="0,15,0,10"
-                                            Minimum="0" 
-                                            Maximum="100" 
-                                            Value="{Binding Progress}" 
-                                            Foreground="{StaticResource PrimaryBrush}" 
-                                            Background="#333333"/>
-                                        <TextBlock Grid.Row="2" Text="{Binding Status}" 
-                                                   Foreground="{StaticResource SubTextBrush}" FontSize="12"/>
-                                        
-                                        <TextBlock Grid.Row="2" Grid.Column="1" 
-                                                   Text="{Binding Progress, StringFormat={}{0}%}" 
-                                                   Foreground="White" FontSize="12" HorizontalAlignment="Right"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </Grid>
-            </DockPanel>
-        </Border>
     </Grid>
 </Window>

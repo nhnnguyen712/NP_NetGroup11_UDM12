@@ -1,38 +1,63 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
+
+using System.Net.Sockets;
+using MultiFileDownloader.Shared;
 
 namespace MultiFileDownloader.Client
 {
     public class NetworkClient
     {
-        private static readonly Random rnd = new Random();
+        TcpClient client;
+        NetworkStream stream;
 
-        // NÂNG CẤP: Thêm cơ chế xử lý lỗi (Exception Handling)
-        public async Task<List<string>> GetFileList()
+        public async Task Connect()
         {
-            try
-            {
-                // Giả lập thời gian phản hồi từ Server (500ms - 1500ms)
-                await Task.Delay(rnd.Next(500, 1500));
+            client = new TcpClient();
 
-                // Giả lập trường hợp lỗi kết nối (ví dụ: 10% khả năng lỗi)
-                // if (rnd.Next(1, 10) == 1) throw new Exception("Không thể kết nối tới Server!");
+            await client.ConnectAsync("127.0.0.1", 8888);
 
-                return new List<string>
-                {
-                    "📄 Project_Final_v2.pdf",
-                    "🎬 Introduction_Clip.mp4",
-                    "📦 Resource_Pack.zip",
-                    "🎵 Background_Theme.wav",
-                    "📝 Readme_Instruction.txt"
-                };
-            }
-            catch (Exception ex)
-            {
-                // Truyền lỗi ra ngoài để UI hiển thị thông báo đẹp cho người dùng
-                throw new Exception("Lỗi kết nối Server: " + ex.Message);
-            }
+            stream = client.GetStream();
+        }
+
+        public async Task RequestFileList()
+        {
+            byte[] packet = PacketHelper.CreatePacket(Command.RequestFileList, Array.Empty<byte>());
+
+            await stream.WriteAsync(packet);
+        }
+
+        public async Task RequestDownload(string name)
+        {
+            byte[] payload = Encoding.UTF8.GetBytes(name);
+
+            byte[] packet = PacketHelper.CreatePacket(Command.RequestDownload, payload);
+
+            await stream.WriteAsync(packet);
+        }
+
+        public NetworkStream GetStream()
+        {
+            return stream;
+        }
+
+        public async Task<string[]> ReceiveFileList()
+        {
+            byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
+
+            Command cmd = (Command)header[0];
+
+            int length = PacketHelper.ParseLength(header);
+
+            byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
+
+            if (cmd != Command.SendFileList)
+                return Array.Empty<string>();
+
+            string data = Encoding.UTF8.GetString(payload);
+
+            return data.Split('|');
         }
     }
 }

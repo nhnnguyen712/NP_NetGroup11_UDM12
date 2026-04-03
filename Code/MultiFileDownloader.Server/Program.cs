@@ -1,21 +1,26 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-class Program
+namespace MultiFileDownloader.Server
 {
-    static async Task Main(string[] args)
+    class Program
     {
-        TcpListener listener = new TcpListener(IPAddress.Any, 6000);
-        listener.Start();
-
-        Console.WriteLine("Server started...");
-
-        while (true)
+        static async Task Main()
         {
-            TcpClient client = await listener.AcceptTcpClientAsync();
-            Console.WriteLine("Client connected");
+            TcpListener server = new TcpListener(IPAddress.Any, 8888);
 
-            _ = Task.Run(() => ClientHandler.Handle(client));
+            server.Start();
+
+            Console.WriteLine("Server running at port 8888");
+
+            while (true)
+            {
+                TcpClient client = await server.AcceptTcpClientAsync();
+
+                Console.WriteLine("Client connected");
+
+                _ = Task.Run(() => ClientHandler.Handle(client));
+            }
         }
     }
 }

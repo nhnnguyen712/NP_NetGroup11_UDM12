@@ -21,9 +21,18 @@
 
         <ListBox x:Name="lbServerFiles"
          Grid.Row="0"
-         Grid.Column="0"
-         SelectionMode="Extended"
-         PreviewMouseMove="lbServerFiles_PreviewMouseMove"/>
+         Grid.Column="0">
+
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding IsSelected}" Margin="5"/>
+                        <TextBlock Text="{Binding FileName}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+
+        </ListBox>
 
         <!-- DOWNLOAD LIST -->
 
@@ -76,15 +85,25 @@
             Orientation="Horizontal"
             HorizontalAlignment="Center">
 
+            <Button Content="Select All"
+            Width="120"
+            Margin="10"
+            Click="SelectAll_Click"/>
+
+            <Button Content="Clear All"
+            Width="120"
+            Margin="10"
+            Click="ClearAll_Click"/>
+
             <Button Content="Download Selected"
-        Width="160"
-        Margin="10"
-        Click="Download_Click"/>
+            Width="160"
+            Margin="10"
+            Click="Download_Click"/>
 
             <Button Content="Open Downloads Folder"
-        Width="200"
-        Margin="10"
-        Click="OpenDownloads_Click"/>
+            Width="200"
+            Margin="10"
+            Click="OpenDownloads_Click"/>
 
         </StackPanel>
 

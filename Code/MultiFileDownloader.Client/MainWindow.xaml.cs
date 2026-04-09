@@ -1,18 +1,44 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.VisualBasic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.VisualBasic;
 
 namespace MultiFileDownloader.Client
 {
     public partial class MainWindow : Window
     {
+
         NetworkClient client = new NetworkClient();
 
         ObservableCollection<DownloadItem> downloads =
             new ObservableCollection<DownloadItem>();
+
+        SemaphoreSlim semaphore = new SemaphoreSlim(Environment.ProcessorCount); // 👈 THÊM Ở ĐÂY
+
+
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ServerFileItem item in lbServerFiles.Items)
+            {
+                item.IsSelected = true;
+            }
+
+            lbServerFiles.Items.Refresh(); // cập nhật UI
+        }
+
+        private void ClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ServerFileItem item in lbServerFiles.Items)
+            {
+                item.IsSelected = false;
+            }
+
+            lbServerFiles.Items.Refresh(); // cập nhật UI
+        }
+
 
         public MainWindow()
         {
@@ -21,6 +47,8 @@ namespace MultiFileDownloader.Client
             lvDownloads.ItemsSource = downloads;
 
             _ = InitializeApp();
+
+
         }
 
         async Task InitializeApp()
@@ -46,7 +74,13 @@ namespace MultiFileDownloader.Client
             lbServerFiles.Items.Clear();
 
             foreach (var f in files)
-                lbServerFiles.Items.Add(f);
+            {
+                lbServerFiles.Items.Add(new ServerFileItem
+                {
+                    FileName = f,
+                    IsSelected = false
+                });
+            }
         }
 
         // DOWNLOAD BUTTON
@@ -56,9 +90,12 @@ namespace MultiFileDownloader.Client
             if (lbServerFiles.SelectedItems.Count == 0)
                 return;
 
-            foreach (string file in lbServerFiles.SelectedItems)
+            foreach (ServerFileItem item in lbServerFiles.Items)
             {
-                _ = StartNewDownload(file);
+                if (item.IsSelected)
+                {
+                    _ = StartNewDownload(item.FileName);
+                }
             }
         }
 
@@ -112,11 +149,41 @@ namespace MultiFileDownloader.Client
 
             downloads.Add(item);
 
-            await client.RequestDownload(fileName);
+            TcpClient newClient = await client.CreateNewConnection();
+
+            NetworkStream stream = newClient.GetStream();
+
+            await client.SendDownloadRequest(stream, fileName);
 
             DownloadManager manager = new DownloadManager();
 
-            await manager.Download(client.GetStream(), saveName, item);
+            _ = Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        TcpClient newClient = await client.CreateNewConnection();
+
+                        NetworkStream stream = newClient.GetStream();
+
+                        await client.SendDownloadRequest(stream, fileName);
+
+                        DownloadManager manager = new DownloadManager();
+
+                        await manager.Download(stream, saveName, item);
+
+                        newClient.Close();
+                    }
+                    finally
+                    {
+                        semaphore.Release(); // 👈 cực kỳ quan trọng
+                    }
+                });
+                newClient.Close();
+            });
         }
 
         // OPEN DOWNLOAD FOLDER

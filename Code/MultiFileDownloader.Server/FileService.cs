@@ -40,7 +40,7 @@ namespace MultiFileDownloader.Server
 
             await stream.WriteAsync(sizePacket);
 
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[16384];
 
             using FileStream fs = new FileStream(path, FileMode.Open);
 

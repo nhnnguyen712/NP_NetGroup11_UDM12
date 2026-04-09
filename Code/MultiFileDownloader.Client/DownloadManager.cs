@@ -27,8 +27,10 @@ namespace MultiFileDownloader.Client
 
             long received = 0;
 
+
+            long lastUIUpdate = Environment.TickCount;
+            long lastSpeedTime = Environment.TickCount;
             long lastBytes = 0;
-            long lastTime = Environment.TickCount;
 
             while (true)
             {
@@ -43,40 +45,46 @@ namespace MultiFileDownloader.Client
                 byte[] payload =
                     await NetworkUtils.ReadExactlyAsync(stream, length);
 
+                // 📦 nhận size
                 if (cmd == Command.SendFileSize)
                 {
                     item.TotalSize = BitConverter.ToInt64(payload);
                 }
 
+                // 📦 nhận data
                 if (cmd == Command.SendFileChunk)
                 {
                     await fs.WriteAsync(payload);
 
                     received += payload.Length;
-
                     item.ReceivedBytes = received;
 
-                    if (item.TotalSize > 0)
+                    long now = Environment.TickCount;
+
+                    // 🟢 UPDATE PROGRESS (100ms 1 lần)
+                    
+
+                    if (now - lastUIUpdate > 100) // 100ms
                     {
                         double progress =
-                            (double)received /
-                            item.TotalSize * 100;
+                            item.TotalSize > 0
+                            ? (double)received / item.TotalSize * 100
+                            : 0;
 
                         Application.Current.Dispatcher.BeginInvoke(() =>
                         {
                             item.Progress = progress;
                         });
+
+                        lastUIUpdate = now;
                     }
 
-                    int now = Environment.TickCount;
-
-                    if (now - lastTime >= 1000)
+                    // 🔵 UPDATE SPEED (1 giây 1 lần)
+                    if (now - lastSpeedTime > 1000)
                     {
-                        long bytesPerSec =
-                            received - lastBytes;
+                        long bytesPerSec = received - lastBytes;
 
-                        double kb =
-                            bytesPerSec / 1024.0;
+                        double kb = bytesPerSec / 1024.0;
 
                         Application.Current.Dispatcher.BeginInvoke(() =>
                         {
@@ -84,15 +92,20 @@ namespace MultiFileDownloader.Client
                         });
 
                         lastBytes = received;
-                        lastTime = now;
+                        lastSpeedTime = now;
                     }
                 }
 
+                // ✅ hoàn thành
                 if (cmd == Command.DownloadComplete)
                 {
                     Application.Current.Dispatcher.BeginInvoke(() =>
                     {
-                        item.Progress = 100;
+                        if (item.Progress < 100)
+                        {
+                            item.Progress = 100;
+                        }
+
                         item.Speed = "Completed";
                     });
 

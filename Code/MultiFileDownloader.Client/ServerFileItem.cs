@@ -1,9 +1,31 @@
-﻿namespace MultiFileDownloader.Client
-{
-    public class ServerFileItem
-    {
-        public string FileName { get; set; }
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-        public bool IsSelected { get; set; }
+
+
+namespace MultiFileDownloader.Client
+{
+    public class ServerFileItem : INotifyPropertyChanged
+    {
+        private bool isSelected;
+
+        public string FileName { get; set; } = "";
+
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        void OnPropertyChanged([CallerMemberName] string name = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
     }
 }

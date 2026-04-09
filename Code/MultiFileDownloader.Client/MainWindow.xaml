@@ -20,27 +20,36 @@
         <!-- SERVER FILE LIST -->
 
         <ListBox x:Name="lbServerFiles"
-         Grid.Row="0"
-         Grid.Column="0">
-
+         SelectionMode="Single"
+         SelectionChanged="lbServerFiles_SelectionChanged">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <CheckBox IsChecked="{Binding IsSelected}" Margin="5"/>
-                        <TextBlock Text="{Binding FileName}" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0"
+                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                  VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="1"
+                   Text="{Binding FileName}"
+                   VerticalAlignment="Center"/>
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
-
         </ListBox>
+        
+        
 
         <!-- DOWNLOAD LIST -->
 
         <ListView x:Name="lvDownloads"
           Grid.Row="0"
           Grid.Column="1"
-          AllowDrop="True"
-          Drop="lvDownloads_Drop">
+          >
 
             <ListView.View>
 
@@ -86,26 +95,27 @@
             HorizontalAlignment="Center">
 
             <Button Content="Select All"
-            Width="120"
+            Width="136"
             Margin="10"
             Click="SelectAll_Click"/>
 
             <Button Content="Clear All"
-            Width="120"
+            Width="136"
             Margin="10"
             Click="ClearAll_Click"/>
 
             <Button Content="Download Selected"
-            Width="160"
+            Width="163"
             Margin="10"
             Click="Download_Click"/>
 
             <Button Content="Open Downloads Folder"
-            Width="200"
+            Width="163"
             Margin="10"
             Click="OpenDownloads_Click"/>
-
         </StackPanel>
+        
+        
 
     </Grid>
 

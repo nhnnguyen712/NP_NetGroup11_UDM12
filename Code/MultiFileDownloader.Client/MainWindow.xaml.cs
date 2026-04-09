@@ -4,41 +4,20 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace MultiFileDownloader.Client
 {
     public partial class MainWindow : Window
     {
-
         NetworkClient client = new NetworkClient();
 
         ObservableCollection<DownloadItem> downloads =
             new ObservableCollection<DownloadItem>();
 
-        SemaphoreSlim semaphore = new SemaphoreSlim(Environment.ProcessorCount); // 👈 THÊM Ở ĐÂY
+        SemaphoreSlim semaphore = new SemaphoreSlim(3);
 
-
-        private void SelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerFileItem item in lbServerFiles.Items)
-            {
-                item.IsSelected = true;
-            }
-
-            lbServerFiles.Items.Refresh(); // cập nhật UI
-        }
-
-        private void ClearAll_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (ServerFileItem item in lbServerFiles.Items)
-            {
-                item.IsSelected = false;
-            }
-
-            lbServerFiles.Items.Refresh(); // cập nhật UI
-        }
-
+        int activeDownloads = 0;
 
         public MainWindow()
         {
@@ -47,8 +26,6 @@ namespace MultiFileDownloader.Client
             lvDownloads.ItemsSource = downloads;
 
             _ = InitializeApp();
-
-
         }
 
         async Task InitializeApp()
@@ -56,12 +33,11 @@ namespace MultiFileDownloader.Client
             try
             {
                 await client.Connect();
-
                 await LoadServerFiles();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Cannot connect server:\n" + ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 
@@ -77,19 +53,15 @@ namespace MultiFileDownloader.Client
             {
                 lbServerFiles.Items.Add(new ServerFileItem
                 {
-                    FileName = f,
-                    IsSelected = false
+                    FileName = f
                 });
             }
         }
 
-        // DOWNLOAD BUTTON
+        // ================= DOWNLOAD =================
 
-        private async void Download_Click(object sender, RoutedEventArgs e)
+        private void Download_Click(object sender, RoutedEventArgs e)
         {
-            if (lbServerFiles.SelectedItems.Count == 0)
-                return;
-
             foreach (ServerFileItem item in lbServerFiles.Items)
             {
                 if (item.IsSelected)
@@ -99,137 +71,128 @@ namespace MultiFileDownloader.Client
             }
         }
 
-        // DOWNLOAD LOGIC
-
         async Task StartNewDownload(string fileName)
         {
-            string downloadFolder =
-                Path.Combine(AppContext.BaseDirectory, "Downloads");
+            Interlocked.Increment(ref activeDownloads);
 
-            Directory.CreateDirectory(downloadFolder);
-
-            string extension = Path.GetExtension(fileName);
-
-            string nameWithoutExt =
-                Path.GetFileNameWithoutExtension(fileName);
+            string folder = Path.Combine(AppContext.BaseDirectory, "Downloads");
+            Directory.CreateDirectory(folder);
 
             string saveName = fileName;
 
-            string path = Path.Combine(downloadFolder, saveName);
+            string path = Path.Combine(folder, saveName);
 
             if (File.Exists(path))
             {
                 var result = MessageBox.Show(
-                    $"File '{fileName}' already exists.\n\n" +
-                    "Yes = Rename and download\n" +
-                    "No = Skip download",
-                    "File Exists",
+                    $"File '{fileName}' already exists\nRename?",
+                    "File exists",
                     MessageBoxButton.YesNo);
 
                 if (result == MessageBoxResult.No)
                     return;
 
+                
+
+                // 👉 CHỈ tăng khi CHẮC CHẮN download
+                Interlocked.Increment(ref activeDownloads);
+
+                string name = Path.GetFileNameWithoutExtension(fileName);
+                string ext = Path.GetExtension(fileName);
+
                 string newName = Interaction.InputBox(
-                    "Enter new file name (without extension):",
-                    "Rename File",
-                    nameWithoutExt + "_1");
+                    "New name:",
+                    "Rename",
+                    name + "_1");
 
                 if (string.IsNullOrWhiteSpace(newName))
                     return;
 
-                saveName = newName + extension;
+                saveName = newName + ext;
             }
 
             var item = new DownloadItem
             {
                 FileName = saveName,
-                Progress = 0,
-                Speed = "Downloading..."
+                Speed = "Waiting..."
             };
 
-            downloads.Add(item);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                downloads.Add(item);
+            });
 
-            TcpClient newClient = await client.CreateNewConnection();
-
-            NetworkStream stream = newClient.GetStream();
-
-            await client.SendDownloadRequest(stream, fileName);
-
-            DownloadManager manager = new DownloadManager();
+            await semaphore.WaitAsync();
 
             _ = Task.Run(async () =>
             {
-                await semaphore.WaitAsync();
-
-                _ = Task.Run(async () =>
+                try
                 {
-                    try
+                    TcpClient c = await client.CreateNewConnection();
+
+                    NetworkStream stream = c.GetStream();
+
+                    await client.SendDownloadRequest(stream, fileName);
+
+                    DownloadManager manager = new DownloadManager();
+
+                    await manager.Download(stream, saveName, item);
+
+                    c.Close();
+                }
+                finally
+                {
+                    semaphore.Release();
+
+                    if (Interlocked.Decrement(ref activeDownloads) == 0)
                     {
-                        TcpClient newClient = await client.CreateNewConnection();
-
-                        NetworkStream stream = newClient.GetStream();
-
-                        await client.SendDownloadRequest(stream, fileName);
-
-                        DownloadManager manager = new DownloadManager();
-
-                        await manager.Download(stream, saveName, item);
-
-                        newClient.Close();
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            foreach (ServerFileItem item in lbServerFiles.Items)
+                            {
+                                item.IsSelected = false;
+                            }
+                        });
                     }
-                    finally
-                    {
-                        semaphore.Release(); // 👈 cực kỳ quan trọng
-                    }
-                });
-                newClient.Close();
+                }
             });
         }
 
-        // OPEN DOWNLOAD FOLDER
-
-        private void OpenDownloads_Click(object sender, RoutedEventArgs e)
+        void UntickAll()
         {
-            string path =
-                Path.Combine(AppContext.BaseDirectory, "Downloads");
-
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
-            Process.Start("explorer.exe", path);
-        }
-
-        // DRAG FILES
-
-        private void lbServerFiles_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed &&
-                lbServerFiles.SelectedItems.Count > 0)
+            foreach (ServerFileItem item in lbServerFiles.Items)
             {
-                var files = lbServerFiles.SelectedItems
-                    .Cast<string>()
-                    .ToArray();
-
-                DragDrop.DoDragDrop(
-                    lbServerFiles,
-                    files,
-                    DragDropEffects.Copy);
+                item.IsSelected = false;
             }
         }
 
-        // DROP FILES
+        // ================= BUTTON =================
 
-        private void lvDownloads_Drop(object sender, DragEventArgs e)
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
         {
-            if (e.Data.GetDataPresent(typeof(string[])))
-            {
-                string[] files =
-                    (string[])e.Data.GetData(typeof(string[]));
+            foreach (ServerFileItem item in lbServerFiles.Items)
+                item.IsSelected = true;
+        }
 
-                foreach (var file in files)
-                {
-                    _ = StartNewDownload(file);
-                }
+        private void ClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (ServerFileItem item in lbServerFiles.Items)
+                item.IsSelected = false;
+        }
+
+        private void OpenDownloads_Click(object sender, RoutedEventArgs e)
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "Downloads");
+
+            Directory.CreateDirectory(path);
+
+            Process.Start("explorer.exe", path);
+        }
+        private void lbServerFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (ServerFileItem item in e.AddedItems)
+            {
+                item.IsSelected = true;
             }
         }
     }

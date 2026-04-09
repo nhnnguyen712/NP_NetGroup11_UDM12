@@ -8,9 +8,12 @@ namespace MultiFileDownloader.Shared
     {
         RequestFileList = 1,
         SendFileList = 2,
+
         RequestDownload = 3,
-        SendFileChunk = 4,
-        DownloadComplete = 5,
-        Error = 6
+
+        SendFileSize = 4,
+        SendFileChunk = 5,
+
+        DownloadComplete = 6
     }
 }

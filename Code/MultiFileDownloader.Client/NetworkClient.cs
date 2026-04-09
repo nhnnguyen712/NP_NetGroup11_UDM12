@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Net.Sockets;
 using System.Text;
-
-using System.Net.Sockets;
 using MultiFileDownloader.Shared;
 
 namespace MultiFileDownloader.Client
@@ -23,16 +20,37 @@ namespace MultiFileDownloader.Client
 
         public async Task RequestFileList()
         {
-            byte[] packet = PacketHelper.CreatePacket(Command.RequestFileList, Array.Empty<byte>());
+            byte[] packet =
+                PacketHelper.CreatePacket(
+                    Command.RequestFileList,
+                    Array.Empty<byte>());
 
             await stream.WriteAsync(packet);
         }
 
-        public async Task RequestDownload(string name)
+        public async Task<string[]> ReceiveFileList()
         {
-            byte[] payload = Encoding.UTF8.GetBytes(name);
+            byte[] header =
+                await NetworkUtils.ReadExactlyAsync(stream, 5);
 
-            byte[] packet = PacketHelper.CreatePacket(Command.RequestDownload, payload);
+            int len = PacketHelper.ParseLength(header);
+
+            byte[] payload =
+                await NetworkUtils.ReadExactlyAsync(stream, len);
+
+            string list = Encoding.UTF8.GetString(payload);
+
+            return list.Split('|');
+        }
+
+        public async Task RequestDownload(string file)
+        {
+            byte[] payload = Encoding.UTF8.GetBytes(file);
+
+            byte[] packet =
+                PacketHelper.CreatePacket(
+                    Command.RequestDownload,
+                    payload);
 
             await stream.WriteAsync(packet);
         }
@@ -40,24 +58,6 @@ namespace MultiFileDownloader.Client
         public NetworkStream GetStream()
         {
             return stream;
-        }
-
-        public async Task<string[]> ReceiveFileList()
-        {
-            byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
-
-            Command cmd = (Command)header[0];
-
-            int length = PacketHelper.ParseLength(header);
-
-            byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
-
-            if (cmd != Command.SendFileList)
-                return Array.Empty<string>();
-
-            string data = Encoding.UTF8.GetString(payload);
-
-            return data.Split('|');
         }
     }
 }

@@ -1,50 +1,46 @@
 ﻿using MultiFileDownloader.Shared;
-using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
 namespace MultiFileDownloader.Server
 {
-
     public static class FileService
     {
-        static string root = Path.Combine(AppContext.BaseDirectory, "files");
-
-        static FileService()
-        {
-            if (!Directory.Exists(root))
-                Directory.CreateDirectory(root);
-        }
-
-        static string Sanitize(string name)
-        {
-            return Path.GetFileName(name);
-        }
+        static string root =
+            Path.Combine(AppContext.BaseDirectory, "files");
 
         public static async Task SendFileList(NetworkStream stream)
         {
-            string[] files = Directory.GetFiles(root);
+            var files = Directory.GetFiles(root)
+                .Select(Path.GetFileName);
 
-            string list = string.Join("|", files.Select(Path.GetFileName));
+            string list = string.Join("|", files);
 
             byte[] payload = Encoding.UTF8.GetBytes(list);
 
-            byte[] packet = PacketHelper.CreatePacket(Command.SendFileList, payload);
+            byte[] packet =
+                PacketHelper.CreatePacket(Command.SendFileList, payload);
 
             await stream.WriteAsync(packet);
         }
 
-        public static async Task SendFile(NetworkStream stream, string name)
+        public static async Task SendFile(NetworkStream stream, string fileName)
         {
-            name = Sanitize(name);
-
-            string path = Path.Combine(root, name);
+            string path = Path.Combine(root, fileName);
 
             if (!File.Exists(path))
                 return;
 
-            byte[] buffer = new byte[4096];
+            long size = new FileInfo(path).Length;
+
+            byte[] sizePacket =
+                PacketHelper.CreatePacket(
+                    Command.SendFileSize,
+                    BitConverter.GetBytes(size));
+
+            await stream.WriteAsync(sizePacket);
+
+            byte[] buffer = new byte[8192];
 
             using FileStream fs = new FileStream(path, FileMode.Open);
 
@@ -54,15 +50,18 @@ namespace MultiFileDownloader.Server
             {
                 byte[] chunk = buffer.Take(read).ToArray();
 
-                byte[] packet = PacketHelper.CreatePacket(Command.SendFileChunk, chunk);
+                byte[] packet =
+                    PacketHelper.CreatePacket(Command.SendFileChunk, chunk);
 
                 await stream.WriteAsync(packet);
             }
 
-            byte[] end = PacketHelper.CreatePacket(Command.DownloadComplete, Array.Empty<byte>());
+            byte[] end =
+                PacketHelper.CreatePacket(
+                    Command.DownloadComplete,
+                    Array.Empty<byte>());
 
             await stream.WriteAsync(end);
         }
     }
 }
-

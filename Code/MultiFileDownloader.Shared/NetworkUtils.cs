@@ -1,24 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
+﻿using System.Net.Sockets;
 
 namespace MultiFileDownloader.Shared
 {
     public static class NetworkUtils
     {
-        public static async Task<byte[]> ReadExactlyAsync(NetworkStream stream, int count)
+        public static async Task<byte[]> ReadExactlyAsync(NetworkStream stream, int size)
         {
-            byte[] buffer = new byte[count];
+            byte[] buffer = new byte[size];
 
             int offset = 0;
 
-            while (offset < count)
+            while (offset < size)
             {
-                int read = await stream.ReadAsync(buffer, offset, count - offset);
+                int read = await stream.ReadAsync(buffer, offset, size - offset);
 
                 if (read == 0)
-                    throw new Exception("Connection closed");
+                    throw new Exception("Disconnected");
 
                 offset += read;
             }

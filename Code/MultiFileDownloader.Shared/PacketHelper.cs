@@ -3,32 +3,32 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 
+
 namespace MultiFileDownloader.Shared
 {
     public static class PacketHelper
     {
         public static byte[] CreatePacket(Command cmd, byte[] payload)
         {
-            int length = payload.Length;
+            int len = payload.Length;
 
-            int networkLength = IPAddress.HostToNetworkOrder(length);
+            byte[] header = new byte[5];
 
-            byte[] packet = new byte[5 + length];
+            header[0] = (byte)cmd;
 
-            packet[0] = (byte)cmd;
+            byte[] lengthBytes =
+                BitConverter.GetBytes(IPAddress.HostToNetworkOrder(len));
 
-            Array.Copy(BitConverter.GetBytes(networkLength), 0, packet, 1, 4);
+            Array.Copy(lengthBytes, 0, header, 1, 4);
 
-            Array.Copy(payload, 0, packet, 5, payload.Length);
-
-            return packet;
+            return header.Concat(payload).ToArray();
         }
 
         public static int ParseLength(byte[] header)
         {
-            int networkLength = BitConverter.ToInt32(header, 1);
+            int len = BitConverter.ToInt32(header, 1);
 
-            return IPAddress.NetworkToHostOrder(networkLength);
+            return IPAddress.NetworkToHostOrder(len);
         }
     }
 }

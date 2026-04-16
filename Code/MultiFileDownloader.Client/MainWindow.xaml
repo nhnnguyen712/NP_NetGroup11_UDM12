@@ -36,7 +36,33 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
                         <TextBlock Text="Server Files" FontSize="16" FontWeight="Bold" Foreground="#1E88E5" Margin="0,0,0,5"/>
-                        <TextBlock Text="Select files to download" FontSize="11" Foreground="#999"/>
+                        <TextBlock Text="Select files to download" FontSize="11" Foreground="#999" Margin="0,0,0,10"/>
+
+                        <!-- Search Box -->
+                        <Border Background="#F5F5F5" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="searchBox" 
+                                         Grid.Column="0"
+                                         Text="" 
+                                         Padding="8,6"
+                                         Foreground="#333"
+                                         Background="White"
+                                         BorderThickness="0"
+                                         TextChanged="SearchBox_TextChanged"
+                                         VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" 
+                                          Text="🔍" 
+                                          FontSize="14" 
+                                          Foreground="#999"
+                                          VerticalAlignment="Center"
+                                          Margin="5,0,0,0"/>
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="searchCount" Text="" FontSize="10" Foreground="#999" Margin="0,5,0,0"/>
                     </StackPanel>
                     <ListBox x:Name="lbServerFiles"
                      SelectionMode="Multiple"
@@ -75,49 +101,61 @@
 
             <!-- DOWNLOAD LIST PANEL -->
             <Border Grid.Column="1" Background="White" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1" Margin="10,0,0,0" Padding="15" AllowDrop="True" Drop="lvDownloads_Drop" DragOver="lvDownloads_DragOver">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                        <TextBlock Text="Download Queue" FontSize="16" FontWeight="Bold" Foreground="#43A047" Margin="0,0,0,5"/>
-                        <TextBlock Text="Drag &amp; drop files or click Download Selected" FontSize="11" Foreground="#999"/>
-                    </StackPanel>
-                    <ListView x:Name="lvDownloads"
-                      AllowDrop="True"
-                      Drop="lvDownloads_Drop"
-                      DragOver="lvDownloads_DragOver"
-                      BorderThickness="0"
-                      Background="Transparent"
-                      Padding="0"
-                      DockPanel.Dock="Bottom">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="File Name" DisplayMemberBinding="{Binding FileName}" Width="240"/>
-                                <GridViewColumn Header="Progress" Width="240">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ProgressBar Value="{Binding Progress}"
-                                                         Minimum="0"
-                                                         Maximum="100"
-                                                         Width="200"
-                                                         Height="20"
-                                                         Foreground="#43A047"
-                                                         Background="#E8F5E9"
-                                                         BorderBrush="#C8E6C9"
-                                                         BorderThickness="1"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="Speed" DisplayMemberBinding="{Binding Speed}" Width="100"/>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                </DockPanel>
+                <Grid>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                            <TextBlock Text="Download Queue" FontSize="16" FontWeight="Bold" Foreground="#43A047" Margin="0,0,0,5"/>
+                            <TextBlock Text="Drag &amp; drop files or click Download Selected" FontSize="11" Foreground="#999"/>
+                        </StackPanel>
+                        <ListView x:Name="lvDownloads"
+                          AllowDrop="True"
+                          Drop="lvDownloads_Drop"
+                          DragOver="lvDownloads_DragOver"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          Padding="0"
+                          DockPanel.Dock="Bottom">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="File Name" DisplayMemberBinding="{Binding FileName}" Width="240"/>
+                                    <GridViewColumn Header="Progress" Width="240">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ProgressBar Value="{Binding Progress}"
+                                                             Minimum="0"
+                                                             Maximum="100"
+                                                             Width="200"
+                                                             Height="20"
+                                                             Foreground="#43A047"
+                                                             Background="#E8F5E9"
+                                                             BorderBrush="#C8E6C9"
+                                                             BorderThickness="1"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Speed" DisplayMemberBinding="{Binding Speed}" Width="100"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </DockPanel>
+
+                    <!-- Loading Overlay -->
+                    <Border x:Name="loadingOverlay" Background="#00000080" Opacity="0" IsHitTestVisible="False">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="🔄" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="Connecting to server..." FontSize="14" Foreground="White" HorizontalAlignment="Center" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="connectionStatus" Text="Please wait..." FontSize="12" Foreground="#E0E0E0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Border>
         </Grid>
 
         <!-- FOOTER BUTTON PANEL -->
         <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1,1,0,0" Padding="20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" >
-                <Button Content="Select All"
+                <Button x:Name="btnSelectAll"
+                    Content="Select All"
                     Width="140"
                     Padding="10,8"
                     Click="SelectAll_Click"
@@ -126,8 +164,9 @@
                     BorderThickness="0"
                     FontWeight="SemiBold"
                     Cursor="Hand"/>
-                
-                <Button Content="Clear All"
+
+                <Button x:Name="btnClearAll"
+                    Content="Clear All"
                     Width="140"
                     Padding="10,8"
                     Click="ClearAll_Click"
@@ -136,8 +175,9 @@
                     BorderThickness="0"
                     FontWeight="SemiBold"
                     Cursor="Hand"/>
-                
-                <Button Content="Download Selected"
+
+                <Button x:Name="btnDownload"
+                    Content="Download Selected"
                     Width="160"
                     Padding="10,8"
                     Click="Download_Click"
@@ -146,8 +186,9 @@
                     BorderThickness="0"
                     FontWeight="SemiBold"
                     Cursor="Hand"/>
-                
-                <Button Content="Open Folder"
+
+                <Button x:Name="btnOpenFolder"
+                    Content="Open Folder"
                     Width="140"
                     Padding="10,8"
                     Click="OpenDownloads_Click"

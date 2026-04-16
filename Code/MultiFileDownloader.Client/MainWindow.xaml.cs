@@ -25,13 +25,56 @@ namespace MultiFileDownloader.Client
         private ServerFileItem lastSelectedItem = null;
         private ServerFileItem itemBeingClicked = null;
 
+        // Connection state
+        private bool isConnected = false;
+
+        // Danh sách file từ server (toàn bộ)
+        private List<string> allServerFiles = new List<string>();
+
         public MainWindow()
         {
             InitializeComponent();
 
             lvDownloads.ItemsSource = downloads;
 
+            // Set buttons disabled initially
+            SetButtonsEnabled(false);
+
             _ = InitializeApp();
+        }
+
+        // Hàm để enable/disable buttons
+        private void SetButtonsEnabled(bool enabled)
+        {
+            btnSelectAll.IsEnabled = enabled;
+            btnClearAll.IsEnabled = enabled;
+            btnDownload.IsEnabled = enabled;
+            btnOpenFolder.IsEnabled = enabled;
+            lbServerFiles.IsEnabled = enabled;
+        }
+
+        // Hàm để hiển thị loading overlay
+        private void ShowLoading(bool show)
+        {
+            if (show)
+            {
+                loadingOverlay.Opacity = 1;
+                loadingOverlay.IsHitTestVisible = true;
+            }
+            else
+            {
+                loadingOverlay.Opacity = 0;
+                loadingOverlay.IsHitTestVisible = false;
+            }
+        }
+
+        // Hàm để update connection status
+        private void UpdateConnectionStatus(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                connectionStatus.Text = message;
+            });
         }
 
         async Task InitializeApp()
@@ -48,6 +91,10 @@ namespace MultiFileDownloader.Client
                     return;
                 }
 
+                // Hiển thị loading overlay
+                ShowLoading(true);
+                UpdateConnectionStatus("Connecting to server...");
+
                 // Parse host:port
                 var parts = serverAddress.Split(':');
                 string host = parts[0];
@@ -56,12 +103,36 @@ namespace MultiFileDownloader.Client
                 // Tạo client với server address
                 client = new NetworkClient(host, port);
 
-                await client.Connect();
-                await LoadServerFiles();
+                try
+                {
+                    UpdateConnectionStatus("Establishing connection...");
+                    await client.Connect();
+
+                    UpdateConnectionStatus("Loading file list...");
+                    await LoadServerFiles();
+
+                    // Connection successful
+                    isConnected = true;
+                    ShowLoading(false);
+                    SetButtonsEnabled(true);
+                }
+                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionRefused)
+                {
+                    ShowLoading(false);
+                    MessageBox.Show($"❌ Connection Refused\n\nServer at {host}:{port} is not responding.\n\nMake sure the server is running.", "Connection Error");
+                    this.Close();
+                }
+                catch (TimeoutException)
+                {
+                    ShowLoading(false);
+                    MessageBox.Show($"❌ Connection Timeout\n\nCould not connect to {host}:{port} within the timeout period.", "Connection Error");
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Connection Error: " + ex.Message);
+                ShowLoading(false);
+                MessageBox.Show($"❌ Error: {ex.Message}", "Connection Error");
                 this.Close();
             }
         }
@@ -154,15 +225,57 @@ namespace MultiFileDownloader.Client
 
             var files = await client.ReceiveFileList();
 
+            // Lưu toàn bộ danh sách file
+            allServerFiles = new List<string>(files.Where(f => !string.IsNullOrEmpty(f)));
+
+            // Hiển thị toàn bộ files ban đầu
+            RefreshFileList("");
+
+            // Clear search box
+            searchBox.Text = "";
+        }
+
+        // Hàm refresh danh sách file dựa trên search query
+        private void RefreshFileList(string searchQuery)
+        {
             lbServerFiles.Items.Clear();
 
-            foreach (var f in files)
+            // Filter files dựa trên search query
+            var filteredFiles = string.IsNullOrWhiteSpace(searchQuery) 
+                ? allServerFiles 
+                : allServerFiles.Where(f => f.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+            // Thêm filtered files vào ListBox
+            foreach (var f in filteredFiles)
             {
                 lbServerFiles.Items.Add(new ServerFileItem
                 {
                     FileName = f
                 });
             }
+
+            // Update search count
+            UpdateSearchCount(searchQuery, filteredFiles.Count);
+        }
+
+        // Hàm update search count
+        private void UpdateSearchCount(string searchQuery, int count)
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchCount.Text = $"{count} file{(count != 1 ? "s" : "")}";
+            }
+            else
+            {
+                searchCount.Text = $"Found {count} file{(count != 1 ? "s" : "")} matching \"{searchQuery}\"";
+            }
+        }
+
+        // Event handler cho search box
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var searchQuery = searchBox.Text;
+            RefreshFileList(searchQuery);
         }
 
         // ================= MULTIPLE SELECTION =================

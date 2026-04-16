@@ -51,25 +51,23 @@ namespace MultiFileDownloader.Server
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
             {
                 Console.WriteLine();
-                Console.WriteLine("╔═══════════════════════════════════════════════════════════╗");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine("║  ❌ PORT ALREADY IN USE                                   ║");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine($"║  Port {port} đang bị chiếm bởi một ứng dụng khác!         ");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine("║  💡 Cách giải quyết:                                      ║");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine($"║  1️⃣  Chạy với port khác:                                ║");
-                Console.WriteLine($"║     dotnet run 9999                                       ║");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine($"║  2️⃣  Đặt environment variable:                           ║");
-                Console.WriteLine($"║     SET FILE_DOWNLOADER_PORT=9999                        ║");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine($"║  3️⃣  Tìm process chiếm port {port}:                      ");
-                Console.WriteLine("║     netstat -ano | findstr :" + port);
-                Console.WriteLine("║     taskkill /PID <PID> /F                                ║");
-                Console.WriteLine("║                                                           ║");
-                Console.WriteLine("╚═══════════════════════════════════════════════════════════╝");
+               
+                Console.WriteLine("PORT ALREADY IN USE");
+                Console.WriteLine($"Port {port} đang bị chiếm bởi một ứng dụng khác!");
+                Console.WriteLine(" ");
+                Console.WriteLine("Cách giải quyết:");
+                Console.WriteLine("                                                          ");
+                Console.WriteLine($" 1️ Chạy với port khác:");
+                Console.WriteLine($"    dotnet run 9999 ");
+                Console.WriteLine("                                                          ");
+                Console.WriteLine($" 2️ Đặt environment variable:");
+                Console.WriteLine($"  SET FILE_DOWNLOADER_PORT=9999");
+                Console.WriteLine("                                                          ");
+                Console.WriteLine($" 3️ Tìm process chiếm port {port}: ");
+                Console.WriteLine("     netstat -ano | findstr :" + port);
+                Console.WriteLine("     taskkill /PID <PID> /F ");
+                Console.WriteLine("                                                          ");
+               
                 return;
             }
             catch (Exception ex)
@@ -80,21 +78,17 @@ namespace MultiFileDownloader.Server
 
             // In thông tin server đẹp
             Console.Clear();
-            Console.WriteLine("╔═══════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                                                           ║");
-            Console.WriteLine("║        🔗 Multi File Downloader Server                    ║");
-            Console.WriteLine("║                                                           ║");
-            Console.WriteLine("╠═══════════════════════════════════════════════════════════╣");
-            Console.WriteLine($"║  📍 Server IP (Localhost): 127.0.0.1:{port}".PadRight(60) + "║");
-            Console.WriteLine($"║  📍 Server IP (Network):   {serverIP}:{port}".PadRight(60) + "║");
-            Console.WriteLine("║                                                           ║");
-            Console.WriteLine("║  📋 Files Location: ./files                               ║");
-            Console.WriteLine("║  ⏱️  Started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss").PadRight(41) + "║");
-            Console.WriteLine("║                                                           ║");
-            Console.WriteLine("║  ✅ Waiting for client connections...                     ║");
-            Console.WriteLine("║                                                           ║");
-            Console.WriteLine("║  💡 Để dừng server: Ấn Ctrl+C                             ║");
-            Console.WriteLine("╚═══════════════════════════════════════════════════════════╝");
+
+            Console.WriteLine("        🔗 Multi File Downloader Server                    ");
+            Console.WriteLine("        ");
+            Console.WriteLine($"Server IP (Localhost): 127.0.0.1:{port}".PadRight(60) + "");
+            Console.WriteLine($"Server IP (Network):   {serverIP}:{port}".PadRight(60) + "");
+            Console.WriteLine("                                                           ");
+            Console.WriteLine("Files Location: ./files                               ");
+            Console.WriteLine("Started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss").PadRight(41) + "");
+            Console.WriteLine("                                                         ");
+            Console.WriteLine("Stop server: Ctrl+C                             ");
+
             Console.WriteLine();
 
             int clientCount = 0;
@@ -105,7 +99,7 @@ namespace MultiFileDownloader.Server
                 clientCount++;
 
                 string clientIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ✓ Client #{clientCount} connected from {clientIP}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]  Client #{clientCount} connected from {clientIP}");
 
                 _ = Task.Run(() => ClientHandler.Handle(client));
             }

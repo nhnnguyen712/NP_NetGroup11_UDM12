@@ -9,7 +9,7 @@ A network-based file downloading application built with C# and .NET 10. The syst
 * Course: Network Programming
 * Group: UDM12 - Group 11
 * .NET Target: .NET 10
-* Demo Video: https://drive.google.com/drive/folders/1FnpQlH6oRj2fdJr8wYw1QNC0XdFApPH3
+* Video: https://drive.google.com/drive/folders/1FnpQlH6oRj2fdJr8wYw1QNC0XdFApPH3
 
 ---
 

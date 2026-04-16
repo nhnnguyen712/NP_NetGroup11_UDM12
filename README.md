@@ -37,19 +37,19 @@
 
 ### Configuration & Deployment
 
-- ✅ **Custom Ports** - Easy port configuration via CLI argument or environment variable
-- ✅ **Auto Folder Creation** - Server auto-creates 'files' folder on startup
-- ✅ **Cross-Platform Server** - Runs on Linux VPS and Windows Server
-- ✅ **Windows Service Support** - Run as Windows Service using NSSM
-- ✅ **Systemd Support** - Linux systemd service integration
+- **Custom Ports** - Easy port configuration via CLI argument or environment variable
+- **Auto Folder Creation** - Server auto-creates 'files' folder on startup
+- **Cross-Platform Server** - Runs on Linux VPS and Windows Server
+- **Windows Service Support** - Run as Windows Service using NSSM
+- **Systemd Support** - Linux systemd service integration
 
 ### UI/UX Enhancements
 
-- ✅ **Loading Overlay** - Visual feedback during server connection
-- ✅ **Button State Management** - Buttons disabled during operations
-- ✅ **Real-time Status Updates** - Shows connection progress
-- ✅ **Error Handling** - Clear error messages and recovery options
-- ✅ **Responsive Design** - Auto-scrolling lists, text ellipsis for long names
+- **Loading Overlay** - Visual feedback during server connection
+- **Button State Management** - Buttons disabled during operations
+- **Real-time Status Updates** - Shows connection progress
+- **Error Handling** - Clear error messages and recovery options
+- **Responsive Design** - Auto-scrolling lists, text ellipsis for long names
 
 ---
 
@@ -214,15 +214,15 @@ See [SETUP_WINDOWS_SERVER_2012_GUIDE.md](./SETUP_WINDOWS_SERVER_2012_GUIDE.md) f
 
 ---
 
-## 📝 Implemented Features
+##  Implemented Features
 
-✅ Phase 1
+ Phase 1
 
 - Basic TCP Server/Client
 - File transfer protocol
 - Simple UI
 
-✅ Phase 2
+ Phase 2
 
 - WPF Modern UI
 - Multi-file download
@@ -230,7 +230,7 @@ See [SETUP_WINDOWS_SERVER_2012_GUIDE.md](./SETUP_WINDOWS_SERVER_2012_GUIDE.md) f
 - Concurrent downloads
 - Drag & drop
 
-✅ Phase 3
+ Phase 3
 
 - Real-time search
 - Loading overlay UI
@@ -238,7 +238,7 @@ See [SETUP_WINDOWS_SERVER_2012_GUIDE.md](./SETUP_WINDOWS_SERVER_2012_GUIDE.md) f
 - Auto folder creation
 - Error handling
 
-✅ Phase 4
+ Phase 4
 
 - Deployment guides (Linux & Windows)
 - Service support (systemd & NSSM)

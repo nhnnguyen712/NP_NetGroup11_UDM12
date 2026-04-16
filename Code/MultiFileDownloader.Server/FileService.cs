@@ -9,8 +9,25 @@ namespace MultiFileDownloader.Server
         static string root =
             Path.Combine(AppContext.BaseDirectory, "files");
 
+        // Khởi tạo - tạo folder nếu chưa tồn tại
+        static FileService()
+        {
+            if (!Directory.Exists(root))
+            {
+                Directory.CreateDirectory(root);
+                Console.WriteLine($"Initialized folder: {root}");
+            }
+        }
+
         public static async Task SendFileList(NetworkStream stream)
         {
+            // Tạo folder "files" nếu chưa tồn tại
+            if (!Directory.Exists(root))
+            {
+                Directory.CreateDirectory(root);
+                Console.WriteLine($"Created folder: {root}");
+            }
+
             var files = Directory.GetFiles(root)
                 .Select(Path.GetFileName);
 

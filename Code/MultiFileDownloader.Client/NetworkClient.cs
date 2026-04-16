@@ -8,12 +8,21 @@ namespace MultiFileDownloader.Client
     {
         TcpClient client;
         NetworkStream stream;
+        private string serverHost = "127.0.0.1";
+        private int serverPort = 8888;
+
+        // Constructor để set server address
+        public NetworkClient(string host = "127.0.0.1", int port = 8888)
+        {
+            serverHost = host;
+            serverPort = port;
+        }
 
         public async Task<TcpClient> CreateNewConnection()
         {
             TcpClient client = new TcpClient();
 
-            await client.ConnectAsync("127.0.0.1", 8888);
+            await client.ConnectAsync(serverHost, serverPort);
 
             return client;
         }
@@ -34,7 +43,7 @@ namespace MultiFileDownloader.Client
         {
             client = new TcpClient();
 
-            await client.ConnectAsync("127.0.0.1", 8888);
+            await client.ConnectAsync(serverHost, serverPort);
 
             stream = client.GetStream();
         }

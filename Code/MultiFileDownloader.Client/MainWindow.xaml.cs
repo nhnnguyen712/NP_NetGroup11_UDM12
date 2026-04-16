@@ -12,7 +12,7 @@ namespace MultiFileDownloader.Client
 {
     public partial class MainWindow : Window
     {
-        NetworkClient client = new NetworkClient();
+        NetworkClient client;
 
         ObservableCollection<DownloadItem> downloads =
             new ObservableCollection<DownloadItem>();
@@ -38,13 +38,114 @@ namespace MultiFileDownloader.Client
         {
             try
             {
+                // Hiển thị dialog để nhập Server Address
+                string serverAddress = await ShowServerConnectionDialog();
+
+                if (string.IsNullOrEmpty(serverAddress))
+                {
+                    MessageBox.Show("Connection cancelled");
+                    this.Close();
+                    return;
+                }
+
+                // Parse host:port
+                var parts = serverAddress.Split(':');
+                string host = parts[0];
+                int port = parts.Length > 1 && int.TryParse(parts[1], out int p) ? p : 8888;
+
+                // Tạo client với server address
+                client = new NetworkClient(host, port);
+
                 await client.Connect();
                 await LoadServerFiles();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("Connection Error: " + ex.Message);
+                this.Close();
             }
+        }
+
+        async Task<string> ShowServerConnectionDialog()
+        {
+            var dialog = new Window
+            {
+                Title = "Connect to Server",
+                Width = 400,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Background = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
+                FontFamily = new FontFamily("Segoe UI"),
+                FontSize = 14
+            };
+
+            var mainPanel = new StackPanel { Margin = new Thickness(20), VerticalAlignment = VerticalAlignment.Center };
+
+            var labelHost = new TextBlock 
+            { 
+                Text = "Server Address (host:port):", 
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 8),
+                Foreground = new SolidColorBrush(Color.FromRgb(30, 136, 229))
+            };
+
+            var textboxHost = new TextBox 
+            { 
+                Text = "127.0.0.1:8888",
+                Padding = new Thickness(10),
+                Height = 40,
+                Margin = new Thickness(0, 0, 0, 15),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(224, 224, 224)),
+                BorderThickness = new Thickness(1)
+            };
+
+            var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+
+            var buttonConnect = new Button 
+            { 
+                Content = "Connect",
+                Width = 100,
+                Padding = new Thickness(10, 8, 10, 8),
+                Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+                Foreground = new SolidColorBrush(Colors.White),
+                BorderThickness = new Thickness(0),
+                FontWeight = FontWeights.SemiBold,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Margin = new Thickness(5)
+            };
+
+            var buttonCancel = new Button 
+            { 
+                Content = "Cancel",
+                Width = 100,
+                Padding = new Thickness(10, 8, 10, 8),
+                Background = new SolidColorBrush(Color.FromRgb(189, 189, 189)),
+                Foreground = new SolidColorBrush(Colors.White),
+                BorderThickness = new Thickness(0),
+                FontWeight = FontWeights.SemiBold,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Margin = new Thickness(5)
+            };
+
+            string result = null;
+            buttonConnect.Click += (s, e) => 
+            { 
+                result = textboxHost.Text;
+                dialog.Close();
+            };
+            buttonCancel.Click += (s, e) => dialog.Close();
+
+            buttonPanel.Children.Add(buttonConnect);
+            buttonPanel.Children.Add(buttonCancel);
+
+            mainPanel.Children.Add(labelHost);
+            mainPanel.Children.Add(textboxHost);
+            mainPanel.Children.Add(buttonPanel);
+
+            dialog.Content = mainPanel;
+            dialog.ShowDialog();
+
+            return result;
         }
 
         async Task LoadServerFiles()

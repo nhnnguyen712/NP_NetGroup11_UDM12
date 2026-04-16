@@ -20,8 +20,10 @@
         <!-- SERVER FILE LIST -->
 
         <ListBox x:Name="lbServerFiles"
-         SelectionMode="Single"
-         SelectionChanged="lbServerFiles_SelectionChanged">
+         SelectionMode="Multiple"
+         SelectionChanged="lbServerFiles_SelectionChanged"
+         PreviewMouseLeftButtonDown="lbServerFiles_PreviewMouseLeftButtonDown"
+         MouseMove="lbServerFiles_MouseMove">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -32,11 +34,13 @@
 
                         <CheckBox Grid.Column="0"
                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                  VerticalAlignment="Center"/>
+                  VerticalAlignment="Center"
+                  Click="CheckBox_Click"/>
 
                         <TextBlock Grid.Column="1"
                    Text="{Binding FileName}"
-                   VerticalAlignment="Center"/>
+                   VerticalAlignment="Center"
+                   Margin="5,0,0,0"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -49,6 +53,9 @@
         <ListView x:Name="lvDownloads"
           Grid.Row="0"
           Grid.Column="1"
+          AllowDrop="True"
+          Drop="lvDownloads_Drop"
+          DragOver="lvDownloads_DragOver"
           >
 
             <ListView.View>

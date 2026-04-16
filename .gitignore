@@ -420,3 +420,9 @@ FodyWeavers.xsd
 ## Thư mục build của C# / .NET
 [Bb]in/
 [Oo]bj/
+
+# Visual Studio v15 solution directory
+.vs/
+
+# GitHub Copilot snapshots
+**/.vs/**/CopilotSnapshots/

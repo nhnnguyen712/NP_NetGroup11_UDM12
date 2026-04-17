@@ -83,7 +83,6 @@ Clone the repository:
 ```
 git clone https://github.com/nhnnguyen712/NP_NetGroup11_UDM12.git
 cd NP_NetGroup11_UDM12
-git checkout dev
 ```
 
 Build the project:

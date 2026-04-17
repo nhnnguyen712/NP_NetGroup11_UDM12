@@ -1,459 +1,356 @@
-# Setup Server trên Windows Server 2012
+# Server Setup on Windows Server 2012
 
-## 📋 Tóm tắt
-- **Server**: Chạy trên Windows Server 2012, listen port 8888
-- **Client**: Chạy trên các máy khác (Windows/Linux), kết nối đến Server
-- **Ports**: 8888 (TCP)
+## Overview
+
+* **Server**: Runs on Windows Server 2012 and listens on port 8888
+* **Client**: Runs on remote machines (Windows/Linux) and connects to the server
+* **Protocol/Port**: TCP 8888
 
 ---
 
-## 🖥️ **PHẦN 1: Chuẩn bị Windows Server 2012**
+## Part 1: Preparing Windows Server 2012
 
-### 1.1 Kiểm tra phiên bản Windows
+### 1.1 Verify Windows Version
+
 ```powershell
-# Mở PowerShell as Administrator
+# Open PowerShell as Administrator
 winver
-# Sẽ thấy: Windows Server 2012
+# Expected: Windows Server 2012
 ```
 
-### 1.2 Cài đặt .NET 10
+### 1.2 Install .NET 10
 
-**Bước 1: Download .NET 10 SDK/Runtime**
+#### Step 1: Download .NET 10 SDK/Runtime
 
-- Truy cập: https://dotnet.microsoft.com/download
-- Chọn: `.NET 10` 
-- Chọn OS: `Windows x64` (hoặc x86 nếu server là 32-bit)
-- Download file `.exe` (Installer)
+* Visit: [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+* Select: .NET 10
+* Choose OS: Windows x64 (or x86 if applicable)
+* Download the installer (.exe)
 
-**Bước 2: Cài đặt**
+#### Step 2: Install
+
 ```powershell
-# Chạy file cài đặt vừa download
 .\dotnet-sdk-10.0.0-win-x64.exe
-# Hoặc runtime:
+# Or runtime:
 .\dotnet-runtime-10.0.0-win-x64.exe
-
-# Chọn "Install"
-# Chờ hoàn tất
 ```
 
-**Bước 3: Kiểm tra cài đặt**
+Follow the installation wizard and complete the setup.
+
+#### Step 3: Verify Installation
+
 ```powershell
 dotnet --version
-# Kết quả: 10.0.0 hoặc cao hơn
+# Expected output: 10.0.0 or later
 ```
 
 ---
 
-## 📂 **PHẦN 2: Setup Thư mục Server**
+## Part 2: Server Directory Setup
 
-### 2.1 Copy Server từ máy local lên Windows Server
+### 2.1 Transfer Server Files to Windows Server
 
-**Cách 1: Dùng Remote Desktop (RDP)**
-- Mở Remote Desktop từ máy local
-- Kết nối đến Windows Server
-- Copy folder `MultiFileDownloader.Server` qua clipboard hoặc USB
-- Dán vào thư mục (ví dụ: `C:\Apps\MultiFileDownloader.Server`)
+**Option 1: Remote Desktop (RDP)**
 
-**Cách 2: Dùng File Sharing**
-```powershell
-# Trên Windows Server 2012:
-# Bật File Sharing
-# Settings > Network and Sharing > Advanced sharing options
-# Bật: Network discovery + File and printer sharing
+* Connect via Remote Desktop
+* Copy the `MultiFileDownloader.Server` folder
+* Paste into a directory such as:
+  `C:\Apps\MultiFileDownloader.Server`
 
-# Từ máy local (Windows):
-# \\SERVER_IP\C$ (hoặc share folder)
-# Paste folder vào
-```
+**Option 2: File Sharing**
 
-**Cách 3: Dùng 7-Zip / WinRAR**
-- Compress folder `MultiFileDownloader.Server` thành `.zip`
-- Upload lên server bằng RDP
-- Extract trên server
+* Enable Network Discovery and File Sharing
+* Access via: `\\SERVER_IP\C$`
+* Copy files into the target directory
 
-### 2.2 Tạo thư mục "files"
+**Option 3: Archive Transfer**
+
+* Compress the folder into a `.zip` file
+* Upload and extract on the server
+
+---
+
+### 2.2 Create "files" Directory
 
 ```powershell
-# Mở PowerShell as Administrator
 cd C:\Apps\MultiFileDownloader.Server
-
-# Tạo folder
 mkdir files
-
-# Xác nhận
-ls
-# Sẽ thấy: files folder
 ```
 
-### 2.3 Copy file cần download vào folder "files"
+### 2.3 Add Downloadable Files
 
 ```powershell
-# Ví dụ: Copy file từ Desktop
 copy C:\Users\Admin\Desktop\document.pdf .\files\
 copy C:\Users\Admin\Desktop\video.mp4 .\files\
 
-# Kiểm tra
 ls .\files\
 ```
 
 ---
 
-## 🚀 **PHẦN 3: Chạy Server**
+## Part 3: Running the Server
 
-### 3.1 Chạy trực tiếp (Test)
+### 3.1 Run for Testing
 
 ```powershell
 cd C:\Apps\MultiFileDownloader.Server
 
-# Chạy
 dotnet run
 
-# Hoặc nếu đã publish:
+# Or if published:
 cd bin\Release\net10.0\publish
 .\MultiFileDownloader.Server.exe
 ```
 
-Khi chạy, bạn sẽ thấy:
+Expected output:
+
 ```
-╔═══════════════════════════════════════════════════════════╗
-║        🔗 Multi File Downloader Server                    ║
-╠═══════════════════════════════════════════════════════════╣
-║  📍 Server IP (Localhost): 127.0.0.1:8888               ║
-║  📍 Server IP (Network):   192.168.x.x:8888             ║
-║  ✅ Waiting for client connections...                     ║
-╚═══════════════════════════════════════════════════════════╝
+Server is running on port 8888
+Waiting for client connections...
 ```
 
 ---
 
-### 3.2 Chạy ở background (Publish Release)
+### 3.2 Run in Background (Production)
 
-**Bước 1: Publish Release Build**
+#### Step 1: Publish Release
 
 ```powershell
 cd C:\Apps\MultiFileDownloader.Server
-
-# Publish
 dotnet publish -c Release -o publish
-
-# Hoặc nếu dùng self-contained:
-dotnet publish -c Release -o publish --self-contained
 ```
 
-**Bước 2: Tạo Batch File để chạy**
+#### Step 2: Create Startup Script
 
-```powershell
-# Tạo file: run-server.bat
+**Batch file (run-server.bat):**
+
+```bat
 @echo off
 cd /d "C:\Apps\MultiFileDownloader.Server\publish"
 MultiFileDownloader.Server.exe
 pause
 ```
 
-Hoặc tạo file `run-server-background.vbs`:
+**VBScript (background execution):**
 
 ```vbs
-' File: run-server-background.vbs
 Set objShell = CreateObject("WScript.Shell")
 objShell.Run "C:\Apps\MultiFileDownloader.Server\publish\MultiFileDownloader.Server.exe", 0
 ```
 
-Chạy file VBS sẽ start server ở background.
-
 ---
 
-## 🔧 **PHẦN 4: Setup Windows Service (Tự động start)**
+## Part 4: Configure Windows Service (Recommended)
 
-### 4.1 Tạo Windows Service (Cách tốt nhất)
+### 4.1 Install NSSM
 
-**Bước 1: Cài đặt NSSM (Non-Sucking Service Manager)**
+* Download from: [https://nssm.cc/download](https://nssm.cc/download)
+* Extract to a directory (e.g., `C:\Tools`)
+
+Or install via Chocolatey:
 
 ```powershell
-# Download NSSM từ: https://nssm.cc/download
-# Hoặc dùng cmd:
-cd C:\Tools
-# Giải nén file NSSM
-
-# Hoặc cài qua Chocolatey (nếu có):
 choco install nssm
 ```
 
-**Bước 2: Tạo Service**
+### 4.2 Create Service
 
 ```powershell
-# Mở PowerShell as Administrator
-cd C:\Tools\nssm-2.24\win64  # (hoặc phiên bản khác)
+cd C:\Tools\nssm-2.24\win64
 
-# Tạo service
 .\nssm install FileDownloaderService "C:\Apps\MultiFileDownloader.Server\publish\MultiFileDownloader.Server.exe"
-
-# Hoặc nếu cần config thêm:
-.\nssm install FileDownloaderService "C:\Apps\MultiFileDownloader.Server\publish\MultiFileDownloader.Server.exe" "" "" "C:\Apps\MultiFileDownloader.Server\publish"
 ```
 
-**Bước 3: Kiểm tra Service**
-
-```powershell
-# Xem services
-Get-Service | findstr "FileDownloader"
-
-# Hoặc mở Services.msc:
-services.msc
-# Tìm: FileDownloaderService
-```
-
-**Bước 4: Start Service**
+### 4.3 Manage Service
 
 ```powershell
 # Start
-net start FileDownloaderService
+Start-Service FileDownloaderService
 
-# Hoặc:
-Start-Service -Name FileDownloaderService
+# Stop
+Stop-Service FileDownloaderService
 
-# Stop:
-Stop-Service -Name FileDownloaderService
+# Check status
+Get-Service FileDownloaderService
 ```
 
----
-
-### 4.2 Setup Tự động Start khi Server Khởi động
+### 4.4 Enable Auto Start
 
 ```powershell
-# Mở PowerShell as Administrator
-
-# Set service để auto start
 Set-Service -Name FileDownloaderService -StartupType Automatic
-
-# Xác nhận
-Get-Service FileDownloaderService | Select StartType
 ```
 
 ---
 
-## 🔥 **PHẦN 5: Mở Firewall Port 8888**
+## Part 5: Open Firewall Port 8888
 
-### 5.1 Mở Port bằng GUI
+### 5.1 Using GUI
 
-1. **Mở Windows Firewall**
-   - Control Panel > Windows Firewall > Advanced settings
-   - Hoặc: `wf.msc`
+* Open: Windows Firewall with Advanced Security (`wf.msc`)
+* Go to: Inbound Rules → New Rule
+* Select: Port → TCP → Port 8888
+* Allow the connection
+* Apply to desired profiles
+* Name: File Downloader
 
-2. **Thêm Inbound Rule**
-   - Click "Inbound Rules"
-   - Click "New Rule..."
-   - Chọn: "Port"
-   - Next
-   - Chọn: "TCP"
-   - Specific local ports: `8888`
-   - Next
-   - Chọn: "Allow the connection"
-   - Next
-   - Chọn Domain, Private, Public (hoặc tùy)
-   - Next
-   - Name: "File Downloader"
-   - Finish
-
-### 5.2 Mở Port bằng PowerShell
+### 5.2 Using PowerShell
 
 ```powershell
-# Mở PowerShell as Administrator
-
-# Thêm firewall rule
 New-NetFirewallRule -DisplayName "File Downloader" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8888
 
-# Xác nhận
 Get-NetFirewallRule -DisplayName "File Downloader"
-
-# Nếu muốn xóa:
-Remove-NetFirewallRule -DisplayName "File Downloader"
 ```
 
 ---
 
-## 📊 **PHẦN 6: Kiểm tra Server đang chạy**
+## Part 6: Verify Server Status
 
-### 6.1 Check từ Windows Server
+### 6.1 On Server
 
 ```powershell
-# Kiểm tra port 8888 đang listen
 netstat -ano | findstr 8888
 
-# Kết quả sẽ hiển thị process ID
-
-# Hoặc dùng:
+# Or
 Get-NetTCPConnection -LocalPort 8888
 ```
 
-### 6.2 Check từ máy client
+### 6.2 From Client
 
 ```powershell
-# Kiểm tra kết nối (Windows Client)
 telnet SERVER_IP 8888
 
-# Hoặc:
+# Or
 Test-NetConnection -ComputerName SERVER_IP -Port 8888
 ```
 
 ---
 
-## 💻 **PHẦN 7: Setup Client**
+## Part 7: Client Setup
 
-### 7.1 Client từ máy Windows
+### 7.1 Run Client
 
 ```powershell
 cd Code\MultiFileDownloader.Client
 dotnet run
 ```
 
-Nhập Server Address:
+### 7.2 Enter Server Address
+
 ```
-192.168.x.x:8888
+SERVER_IP:8888
 ```
 
-### 7.2 Client từ máy khác
+Example:
 
-Làm tương tự như trên, chỉ thay Server IP.
+```
+192.168.1.50:8888
+```
 
 ---
 
-## 📝 **Ví dụ hoàn chỉnh**
+## Example Deployment
 
-### Windows Server 2012 - IP: 192.168.1.50
+### Server (192.168.1.50)
 
-**Setup:**
 ```powershell
-# 1. Kiểm tra .NET
 dotnet --version
 
-# 2. Copy file
 mkdir C:\Apps\MultiFileDownloader.Server
-# (Copy files vào)
 
-# 3. Tạo folder files
 cd C:\Apps\MultiFileDownloader.Server
 mkdir files
 
-# 4. Copy files cần download
 copy D:\data\*.pdf .\files\
 
-# 5. Publish
 dotnet publish -c Release
 
-# 6. Tạo Service
 cd C:\Tools\nssm-2.24\win64
 .\nssm install FileDownloaderService "C:\Apps\MultiFileDownloader.Server\publish\MultiFileDownloader.Server.exe"
 
-# 7. Set auto start
 Set-Service -Name FileDownloaderService -StartupType Automatic
+Start-Service FileDownloaderService
 
-# 8. Start service
-Start-Service -Name FileDownloaderService
-
-# 9. Mở firewall
 New-NetFirewallRule -DisplayName "File Downloader" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8888
-
-# 10. Kiểm tra
-Get-Service FileDownloaderService
-Get-NetTCPConnection -LocalPort 8888
 ```
 
-**Client (máy khác):**
+### Client
+
 ```powershell
 dotnet run
-# Nhập: 192.168.1.50:8888
-# Tải file!
+# Enter: 192.168.1.50:8888
 ```
 
 ---
 
-## 🔧 **Troubleshooting**
+## Troubleshooting
 
-### ❌ ".NET SDK not found"
+### .NET Not Installed
+
 ```powershell
-# Kiểm tra cài đặt
 dotnet --version
-
-# Nếu lỗi, cài lại .NET 10
-# https://dotnet.microsoft.com/download
 ```
 
-### ❌ "Port 8888 already in use"
-```powershell
-# Tìm process dùng port 8888
-netstat -ano | findstr 8888
+Reinstall .NET 10 if necessary.
 
-# Kill process (nếu cần)
+---
+
+### Port 8888 Already in Use
+
+```powershell
+netstat -ano | findstr 8888
 taskkill /PID <PID> /F
 ```
 
-### ❌ "Access Denied" khi tạo Service
-```powershell
-# Chạy PowerShell as Administrator
-# Right-click > Run as Administrator
-```
+---
 
-### ❌ "Service không start"
+### Access Denied (Service Creation)
+
+* Ensure PowerShell is running as Administrator
+
+---
+
+### Service Fails to Start
+
 ```powershell
-# Kiểm tra log
 Get-EventLog -LogName Application | Where-Object { $_.EventID -eq 7000 } | Select-Object -Last 5
 
-# Hoặc check service status:
-Get-Service FileDownloaderService | Select Status, StartType
+Get-Service FileDownloaderService
 ```
 
-### ❌ "Firewall block port"
+---
+
+### Firewall Blocking Port
+
 ```powershell
-# Kiểm tra rule
 Get-NetFirewallRule -DisplayName "File Downloader"
 
-# Nếu chưa có, tạo:
+# Recreate rule if needed:
 New-NetFirewallRule -DisplayName "File Downloader" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8888
 ```
 
 ---
 
-## 📚 **Tài liệu tham khảo**
-
-- [.NET on Windows](https://learn.microsoft.com/en-us/dotnet/core/install/windows)
-- [NSSM - Windows Service Manager](https://nssm.cc/)
-- [Windows Firewall](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/)
-- [PowerShell Networking](https://learn.microsoft.com/en-us/powershell/module/nettcpip/)
-
----
-
-## ⚡ **Quick Start (Nhanh nhất)**
+## Quick Start
 
 ```powershell
-# 1. Cài .NET 10
-# (Download & cài từ: https://dotnet.microsoft.com/download)
+# Install .NET 10
 
-# 2. Copy & Setup
 mkdir C:\Apps\MultiFileDownloader.Server
-# Paste files + create ./files folder
 
-# 3. Publish
 cd C:\Apps\MultiFileDownloader.Server
 dotnet publish -c Release
 
-# 4. Test run (optional)
 cd publish
 .\MultiFileDownloader.Server.exe
 
-# 5. Tạo Windows Service (NSSM)
-# Download NSSM từ https://nssm.cc/
+# Install NSSM and create service
 # .\nssm install FileDownloaderService "C:\Apps\MultiFileDownloader.Server\publish\MultiFileDownloader.Server.exe"
 
-# 6. Auto start
 Set-Service -Name FileDownloaderService -StartupType Automatic
 
-# 7. Mở firewall
 New-NetFirewallRule -DisplayName "File Downloader" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8888
 
-# 8. Start
-Start-Service -Name FileDownloaderService
-
-# ✅ Done! Server sẽ chạy tự động khi reboot
+Start-Service FileDownloaderService
 ```
 
-Server sẽ in ra IP, bạn copy-paste vào client là xong! 🎉
+The server will start automatically after reboot, and clients can connect using the server IP and port 8888.

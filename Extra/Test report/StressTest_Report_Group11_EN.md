@@ -56,7 +56,7 @@ All tests are executed by the **MultiFileDownloader.StressTest** console applica
 | .NET Runtime | 10.0.6 |
 | Server Address | 192.168.1.34:8888 (LAN) |
 | Files on Server | 5 |
-| Test File | NP_NetGroup11_UDM12.docx (531.3 KB) |
+| Test File | ProjectReport.docx (531.3 KB) |
 
 ---
 
@@ -132,7 +132,7 @@ Protocol commands:
 
 ### 4.3. Single Download Throughput
 
-**Method**: Download `NP_NetGroup11_UDM12.docx` (531.3 KB) 5 times sequentially, each on a fresh connection.
+**Method**: Download `ProjectReport.docx` (531.3 KB) 5 times sequentially, each on a fresh connection.
 
 | Metric | Value |
 |--------|-------|
@@ -149,7 +149,7 @@ Protocol commands:
 
 ### 4.4. Concurrent Download Scalability
 
-**Method**: Download `NP_NetGroup11_UDM12.docx` with 1, 2, 3, 5, and 10 concurrent clients.
+**Method**: Download `ProjectReport.docx` with 1, 2, 3, 5, and 10 concurrent clients.
 
 | Concurrency | Avg Time (ms) | Total Throughput | Per-Client Throughput | Success | Failed |
 |-------------|---------------|------------------|-----------------------|---------|--------|
@@ -201,7 +201,7 @@ Protocol commands:
 
 ### 5.3. Concurrent Download Stress Test
 
-**Method**: N clients simultaneously download `NP_NetGroup11_UDM12.docx` (531.3 KB).
+**Method**: N clients simultaneously download `ProjectReport.docx` (531.3 KB).
 
 | Clients | Success | Failed | Avg (ms) | Min (ms) | Max (ms) | Total Data | Total Throughput |
 |---------|---------|--------|----------|----------|----------|------------|------------------|

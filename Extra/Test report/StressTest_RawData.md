@@ -44,7 +44,7 @@ Iterations: 20
 
 ### Single Download
 
-File: `NP_NetGroup11_UDM12.docx` (531.3 KB)
+File: `ProjectReport.docx` (531.3 KB)
 Iterations: 5
 
 | Metric | Value |
@@ -58,7 +58,7 @@ Iterations: 5
 
 ### Concurrent Download Scalability
 
-File: `NP_NetGroup11_UDM12.docx`
+File: `ProjectReport.docx`
 
 | Concurrency | Avg Time (ms) | Total Throughput (KB/s) | Per-Client (KB/s) | Success | Failed |
 |-------------|---------------|------------------------|--------------------|---------|--------|
@@ -89,7 +89,7 @@ File: `NP_NetGroup11_UDM12.docx`
 
 ### Concurrent Download Stress Test
 
-File: `NP_NetGroup11_UDM12.docx`
+File: `ProjectReport.docx`
 
 | Clients | Success | Failed | Avg (ms) | Min (ms) | Max (ms) | Total Data | Total Throughput |
 |---------|---------|--------|----------|----------|----------|------------|------------------|

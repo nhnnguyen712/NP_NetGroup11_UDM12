@@ -138,8 +138,7 @@ The server port is determined in order of priority:
 | Priority | Method | Example |
 |----------|--------|---------|
 | 1 (highest) | CLI argument | `dotnet run 9999` |
-| 2 | Environment variable | `SET FILE_DOWNLOADER_PORT=9999` |
-| 3 (default) | Built-in default | Port `8888` |
+| 2 (default) | Built-in default | Port `8888` |
 
 ### Client Connection
 
@@ -147,8 +146,7 @@ Enter the server address in the client's connection prompt:
 
 ```
 127.0.0.1:8888          # Localhost
-192.168.1.100:8888      # LAN
-example.com:9999        # Remote server
+[IP_ADDRESS]:8888      # LAN
 ```
 
 ---
@@ -166,6 +164,20 @@ Tested on a 16-core machine with .NET 10.0.6. Full report available in `Extra/Te
 | Concurrent connections tested | 100 (100% success) |
 | Concurrent downloads tested | 20 (100% success) |
 
+### Server Test Files
+
+Files used for download testing, located in the server's `files/` directory:
+
+| File | Type | Size |
+|------|------|------|
+| `ProjectReport.docx` | Document | 531.3 KB |
+| `Presentation.pptx` | Presentation | 2.0 MB |
+| `Installer_169MB.exe` | Executable | 168.5 MB |
+| `SDK_216MB.zip` | Archive | 216.4 MB |
+| `LargeArchive_1663MB.rar` | Archive | 1,662.8 MB |
+
+The file set covers a range of sizes from 531 KB to 1.6 GB, enabling throughput measurement across different transfer durations.
+
 ---
 
 ## Documentation
@@ -176,7 +188,7 @@ Tested on a 16-core machine with .NET 10.0.6. Full report available in `Extra/Te
 | Windows Server 2012 deployment guide | `Extra/Documentation/SETUP_WINDOWS_SERVER_2012_GUIDE.md` |
 | Server port configuration guide | `Extra/Documentation/HOW_TO_CHANGE_SERVER_PORT.md` |
 | Stress test report (English) | `Extra/Test report/StressTest_Report_Group11_EN.md` |
-| Raw test data | `Extra/Test report/TestReport_20260418_100850.md` |
+| Raw test data | `Extra/Test report/StressTest_RawData.md` |
 
 ---
 

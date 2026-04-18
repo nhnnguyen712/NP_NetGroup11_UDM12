@@ -1,4 +1,4 @@
-﻿using MultiFileDownloader.Shared;
+using MultiFileDownloader.Shared;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
@@ -6,6 +6,7 @@ using System.Windows;
 
 namespace MultiFileDownloader.Client
 {
+    // Receives file data from server and writes to disk with progress tracking
     public class DownloadManager
     {
         string downloadFolder =
@@ -27,7 +28,6 @@ namespace MultiFileDownloader.Client
 
             long received = 0;
 
-
             long lastUIUpdate = Environment.TickCount;
             long lastSpeedTime = Environment.TickCount;
             long lastBytes = 0;
@@ -45,13 +45,13 @@ namespace MultiFileDownloader.Client
                 byte[] payload =
                     await NetworkUtils.ReadExactlyAsync(stream, length);
 
-                // 📦 nhận size
+                // Receive total file size
                 if (cmd == Command.SendFileSize)
                 {
                     item.TotalSize = BitConverter.ToInt64(payload);
                 }
 
-                // 📦 nhận data
+                // Receive file data chunk
                 if (cmd == Command.SendFileChunk)
                 {
                     await fs.WriteAsync(payload);
@@ -61,10 +61,8 @@ namespace MultiFileDownloader.Client
 
                     long now = Environment.TickCount;
 
-                    // 🟢 UPDATE PROGRESS (100ms 1 lần)
-                    
-
-                    if (now - lastUIUpdate > 100) // 100ms
+                    // Update progress bar (throttle: every 100ms)
+                    if (now - lastUIUpdate > 100)
                     {
                         double progress =
                             item.TotalSize > 0
@@ -79,7 +77,7 @@ namespace MultiFileDownloader.Client
                         lastUIUpdate = now;
                     }
 
-                    // 🔵 UPDATE SPEED (1 giây 1 lần)
+                    // Update speed display (throttle: every 1s)
                     if (now - lastSpeedTime > 1000)
                     {
                         long bytesPerSec = received - lastBytes;
@@ -96,7 +94,7 @@ namespace MultiFileDownloader.Client
                     }
                 }
 
-                // ✅ hoàn thành
+                // Download finished
                 if (cmd == Command.DownloadComplete)
                 {
                     Application.Current.Dispatcher.BeginInvoke(() =>

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiFileDownloader.Server"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiFileDownloader.Shared", "Code\MultiFileDownloader.Shared\MultiFileDownloader.Shared.csproj", "{2289BEC0-47CA-9D6D-6A42-03FF2CA5F72E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiFileDownloader.StressTest", "Code\MultiFileDownloader.StressTest\MultiFileDownloader.StressTest.csproj", "{B3C7D1A2-5E4F-6890-ABCD-1234567890EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{2289BEC0-47CA-9D6D-6A42-03FF2CA5F72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2289BEC0-47CA-9D6D-6A42-03FF2CA5F72E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2289BEC0-47CA-9D6D-6A42-03FF2CA5F72E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3C7D1A2-5E4F-6890-ABCD-1234567890EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3C7D1A2-5E4F-6890-ABCD-1234567890EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3C7D1A2-5E4F-6890-ABCD-1234567890EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3C7D1A2-5E4F-6890-ABCD-1234567890EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +42,7 @@ Global
 		{041C0E11-225B-F80C-C7C1-785BA7BCAEF2} = {314C6247-30EA-3492-19B6-DF847E3B326F}
 		{A7B56B69-D0AA-337A-0083-157D15CC9F1F} = {314C6247-30EA-3492-19B6-DF847E3B326F}
 		{2289BEC0-47CA-9D6D-6A42-03FF2CA5F72E} = {314C6247-30EA-3492-19B6-DF847E3B326F}
+		{B3C7D1A2-5E4F-6890-ABCD-1234567890EF} = {314C6247-30EA-3492-19B6-DF847E3B326F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {11762264-19A6-4E11-B4C0-06B6FFAFC251}

@@ -1,10 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 
 
 namespace MultiFileDownloader.Client
 {
+    // Represents a file entry from the server list (with selection state for UI binding)
     public class ServerFileItem : INotifyPropertyChanged
     {
         private bool isSelected;

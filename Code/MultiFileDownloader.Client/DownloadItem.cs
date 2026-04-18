@@ -1,8 +1,9 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace MultiFileDownloader.Client
 {
+    // View-model for a download task (binds to progress bar and speed label)
     public class DownloadItem : INotifyPropertyChanged
     {
         double progress = 0;

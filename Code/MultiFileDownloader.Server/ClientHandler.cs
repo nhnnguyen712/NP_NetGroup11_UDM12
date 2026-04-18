@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
@@ -6,6 +6,7 @@ using MultiFileDownloader.Shared;
 
 namespace MultiFileDownloader.Server
 {
+    // Handles a single client connection on a background task
     public static class ClientHandler
     {
         static string root = Path.GetFullPath("files");
@@ -18,14 +19,14 @@ namespace MultiFileDownloader.Server
 
                 while (true)
                 {
+                    // Read 5-byte packet header
                     byte[] header = await NetworkUtils.ReadExactlyAsync(stream, 5);
 
                     Command cmd = (Command)header[0];
-
                     int length = PacketHelper.ParseLength(header);
-
                     byte[] payload = await NetworkUtils.ReadExactlyAsync(stream, length);
 
+                    // Dispatch command
                     switch (cmd)
                     {
                         case Command.RequestFileList:

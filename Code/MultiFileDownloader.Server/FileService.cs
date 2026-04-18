@@ -1,15 +1,16 @@
-﻿using MultiFileDownloader.Shared;
+using MultiFileDownloader.Shared;
 using System.Net.Sockets;
 using System.Text;
 
 namespace MultiFileDownloader.Server
 {
+    // Handles file listing and file streaming to clients
     public static class FileService
     {
         static string root =
             Path.Combine(AppContext.BaseDirectory, "files");
 
-        // Khởi tạo - tạo folder nếu chưa tồn tại
+        // Ensure the files directory exists on startup
         static FileService()
         {
             if (!Directory.Exists(root))
@@ -19,9 +20,9 @@ namespace MultiFileDownloader.Server
             }
         }
 
+        // Send pipe-delimited file list to client
         public static async Task SendFileList(NetworkStream stream)
         {
-            // Tạo folder "files" nếu chưa tồn tại
             if (!Directory.Exists(root))
             {
                 Directory.CreateDirectory(root);
@@ -41,6 +42,7 @@ namespace MultiFileDownloader.Server
             await stream.WriteAsync(packet);
         }
 
+        // Stream file to client: size -> chunks -> complete signal
         public static async Task SendFile(NetworkStream stream, string fileName)
         {
             string path = Path.Combine(root, fileName);
@@ -48,6 +50,7 @@ namespace MultiFileDownloader.Server
             if (!File.Exists(path))
                 return;
 
+            // Send file size
             long size = new FileInfo(path).Length;
 
             byte[] sizePacket =
@@ -57,15 +60,19 @@ namespace MultiFileDownloader.Server
 
             await stream.WriteAsync(sizePacket);
 
+            // Send file data in 16KB chunks
             byte[] buffer = new byte[16384];
 
-            using FileStream fs = new FileStream(path, FileMode.Open);
+            // Open with Read access and shared Read to allow concurrent downloads
+            using FileStream fs = new FileStream(
+                path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             int read;
 
             while ((read = await fs.ReadAsync(buffer)) > 0)
             {
-                byte[] chunk = buffer.Take(read).ToArray();
+                byte[] chunk = new byte[read];
+                Buffer.BlockCopy(buffer, 0, chunk, 0, read);
 
                 byte[] packet =
                     PacketHelper.CreatePacket(Command.SendFileChunk, chunk);
@@ -73,6 +80,7 @@ namespace MultiFileDownloader.Server
                 await stream.WriteAsync(packet);
             }
 
+            // Send completion signal
             byte[] end =
                 PacketHelper.CreatePacket(
                     Command.DownloadComplete,

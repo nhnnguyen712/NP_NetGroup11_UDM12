@@ -1,4 +1,4 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
 
 namespace MultiFileDownloader.Shared
 {
@@ -7,7 +7,6 @@ namespace MultiFileDownloader.Shared
         public static async Task<byte[]> ReadExactlyAsync(NetworkStream stream, int size)
         {
             byte[] buffer = new byte[size];
-
             int offset = 0;
 
             while (offset < size)

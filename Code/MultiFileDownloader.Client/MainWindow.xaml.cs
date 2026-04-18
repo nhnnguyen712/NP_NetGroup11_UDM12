@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -17,18 +17,18 @@ namespace MultiFileDownloader.Client
         ObservableCollection<DownloadItem> downloads =
             new ObservableCollection<DownloadItem>();
 
+        // Limit concurrent downloads
         SemaphoreSlim semaphore = new SemaphoreSlim(3);
 
         int activeDownloads = 0;
 
-        // Cho Ctrl/Shift Click functionality
+        // For Ctrl/Shift click multi-selection
         private ServerFileItem lastSelectedItem = null;
         private ServerFileItem itemBeingClicked = null;
 
-        // Connection state
         private bool isConnected = false;
 
-        // Danh sách file từ server (toàn bộ)
+        // Full server file list
         private List<string> allServerFiles = new List<string>();
 
         public MainWindow()
@@ -37,13 +37,11 @@ namespace MultiFileDownloader.Client
 
             lvDownloads.ItemsSource = downloads;
 
-            // Set buttons disabled initially
             SetButtonsEnabled(false);
 
             _ = InitializeApp();
         }
 
-        // Hàm để enable/disable buttons
         private void SetButtonsEnabled(bool enabled)
         {
             btnSelectAll.IsEnabled = enabled;
@@ -53,7 +51,6 @@ namespace MultiFileDownloader.Client
             lbServerFiles.IsEnabled = enabled;
         }
 
-        // Hàm để hiển thị loading overlay
         private void ShowLoading(bool show)
         {
             if (show)
@@ -68,7 +65,6 @@ namespace MultiFileDownloader.Client
             }
         }
 
-        // Hàm để update connection status
         private void UpdateConnectionStatus(string message)
         {
             Dispatcher.Invoke(() =>
@@ -77,11 +73,12 @@ namespace MultiFileDownloader.Client
             });
         }
 
+        // ==================== CONNECTION ====================
+
         async Task InitializeApp()
         {
             try
             {
-                // Hiển thị dialog để nhập Server Address
                 string serverAddress = await ShowServerConnectionDialog();
 
                 if (string.IsNullOrEmpty(serverAddress))
@@ -91,7 +88,6 @@ namespace MultiFileDownloader.Client
                     return;
                 }
 
-                // Hiển thị loading overlay
                 ShowLoading(true);
                 UpdateConnectionStatus("Connecting to server...");
 
@@ -100,7 +96,6 @@ namespace MultiFileDownloader.Client
                 string host = parts[0];
                 int port = parts.Length > 1 && int.TryParse(parts[1], out int p) ? p : 8888;
 
-                // Tạo client với server address
                 client = new NetworkClient(host, port);
 
                 try
@@ -111,7 +106,6 @@ namespace MultiFileDownloader.Client
                     UpdateConnectionStatus("Loading file list...");
                     await LoadServerFiles();
 
-                    // Connection successful
                     isConnected = true;
                     ShowLoading(false);
                     SetButtonsEnabled(true);
@@ -219,33 +213,29 @@ namespace MultiFileDownloader.Client
             return result;
         }
 
+        // ==================== FILE LIST ====================
+
         async Task LoadServerFiles()
         {
             await client.RequestFileList();
 
             var files = await client.ReceiveFileList();
 
-            // Lưu toàn bộ danh sách file
             allServerFiles = new List<string>(files.Where(f => !string.IsNullOrEmpty(f)));
 
-            // Hiển thị toàn bộ files ban đầu
             RefreshFileList("");
-
-            // Clear search box
             searchBox.Text = "";
         }
 
-        // Hàm refresh danh sách file dựa trên search query
+        // Filter and display files based on search query
         private void RefreshFileList(string searchQuery)
         {
             lbServerFiles.Items.Clear();
 
-            // Filter files dựa trên search query
             var filteredFiles = string.IsNullOrWhiteSpace(searchQuery) 
                 ? allServerFiles 
                 : allServerFiles.Where(f => f.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
 
-            // Thêm filtered files vào ListBox
             foreach (var f in filteredFiles)
             {
                 lbServerFiles.Items.Add(new ServerFileItem
@@ -254,11 +244,9 @@ namespace MultiFileDownloader.Client
                 });
             }
 
-            // Update search count
             UpdateSearchCount(searchQuery, filteredFiles.Count);
         }
 
-        // Hàm update search count
         private void UpdateSearchCount(string searchQuery, int count)
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
@@ -271,14 +259,13 @@ namespace MultiFileDownloader.Client
             }
         }
 
-        // Event handler cho search box
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchQuery = searchBox.Text;
             RefreshFileList(searchQuery);
         }
 
-        // ================= MULTIPLE SELECTION =================
+        // ==================== MULTIPLE SELECTION ====================
 
         private void lbServerFiles_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -286,25 +273,25 @@ namespace MultiFileDownloader.Client
 
             if (item != null)
             {
-                itemBeingClicked = item; // Track item được click
+                itemBeingClicked = item;
 
-                // Kiểm tra nếu click vào checkbox, để nó handle bình thường
+                // Let checkbox handle its own click
                 if (IsClickOnCheckBox(e, item))
                 {
                     lastSelectedItem = item;
-                    return; // Không handle, để checkbox tự xử lý
+                    return;
                 }
 
                 if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
-                    // Ctrl+Click: Toggle selection
+                    // Ctrl+Click: toggle selection
                     item.IsSelected = !item.IsSelected;
                     lastSelectedItem = item;
                     e.Handled = true;
                 }
                 else if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
-                    // Shift+Click: Range selection
+                    // Shift+Click: range selection
                     if (lastSelectedItem != null)
                     {
                         SelectRange(lastSelectedItem, item);
@@ -318,7 +305,7 @@ namespace MultiFileDownloader.Client
                 }
                 else
                 {
-                    // Normal click vào text (không phải checkbox): Toggle selection
+                    // Normal click: toggle selection
                     item.IsSelected = !item.IsSelected;
                     lastSelectedItem = item;
                     e.Handled = true;
@@ -336,7 +323,7 @@ namespace MultiFileDownloader.Client
 
         private void lbServerFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Handled by PreviewMouseLeftButtonDown
+            // Selection is handled by PreviewMouseLeftButtonDown
         }
 
         private void SelectRange(ServerFileItem from, ServerFileItem to)
@@ -358,6 +345,7 @@ namespace MultiFileDownloader.Client
             }
         }
 
+        // Hit-test to find which ServerFileItem is at a given point
         private ServerFileItem GetItemAtPoint(ListBox listBox, Point point)
         {
             var result = VisualTreeHelper.HitTest(listBox, point);
@@ -375,6 +363,7 @@ namespace MultiFileDownloader.Client
             return null;
         }
 
+        // Check if the click landed on a CheckBox control
         private bool IsClickOnCheckBox(MouseButtonEventArgs e, ServerFileItem item)
         {
             var hitTest = VisualTreeHelper.HitTest(lbServerFiles, e.GetPosition(lbServerFiles));
@@ -391,7 +380,7 @@ namespace MultiFileDownloader.Client
             return false;
         }
 
-        // ================= DRAG & DROP =================
+        // ==================== DRAG & DROP ====================
 
         private void lbServerFiles_MouseMove(object sender, MouseEventArgs e)
         {
@@ -401,14 +390,13 @@ namespace MultiFileDownloader.Client
 
                 if (item != null && itemBeingClicked == item)
                 {
-                    // Khi detect drag bắt đầu, nếu item không được select, tự động select nó
-                    // (Để drag & drop hoạt động, ngay cả khi user vừa toggle untick)
+                    // Auto-select item when drag starts
                     if (!item.IsSelected)
                     {
                         item.IsSelected = true;
                     }
 
-                    // Lấy tất cả selected items
+                    // Collect all selected file names for drag data
                     var selectedFiles = lbServerFiles.Items
                         .OfType<ServerFileItem>()
                         .Where(x => x.IsSelected)
@@ -422,7 +410,7 @@ namespace MultiFileDownloader.Client
 
                         DragDrop.DoDragDrop(lbServerFiles, dataObject, DragDropEffects.Copy);
 
-                        itemBeingClicked = null; // Reset
+                        itemBeingClicked = null;
                     }
                 }
             }
@@ -453,7 +441,7 @@ namespace MultiFileDownloader.Client
             }
         }
 
-        // ================= DOWNLOAD =================
+        // ==================== DOWNLOAD ====================
 
         private void Download_Click(object sender, RoutedEventArgs e)
         {
@@ -474,9 +462,9 @@ namespace MultiFileDownloader.Client
             Directory.CreateDirectory(folder);
 
             string saveName = fileName;
-
             string path = Path.Combine(folder, saveName);
 
+            // Handle duplicate file name
             if (File.Exists(path))
             {
                 var result = MessageBox.Show(
@@ -487,9 +475,6 @@ namespace MultiFileDownloader.Client
                 if (result == MessageBoxResult.No)
                     return;
 
-                
-
-                // 👉 CHỈ tăng khi CHẮC CHẮN download
                 Interlocked.Increment(ref activeDownloads);
 
                 string name = Path.GetFileNameWithoutExtension(fileName);
@@ -517,20 +502,20 @@ namespace MultiFileDownloader.Client
                 downloads.Add(item);
             });
 
+            // Wait for semaphore slot (max 3 concurrent downloads)
             await semaphore.WaitAsync();
 
             _ = Task.Run(async () =>
             {
                 try
                 {
+                    // Each download uses its own TCP connection
                     TcpClient c = await client.CreateNewConnection();
-
                     NetworkStream stream = c.GetStream();
 
                     await client.SendDownloadRequest(stream, fileName);
 
                     DownloadManager manager = new DownloadManager();
-
                     await manager.Download(stream, saveName, item);
 
                     c.Close();
@@ -539,6 +524,7 @@ namespace MultiFileDownloader.Client
                 {
                     semaphore.Release();
 
+                    // Clear all selections when all downloads finish
                     if (Interlocked.Decrement(ref activeDownloads) == 0)
                     {
                         Application.Current.Dispatcher.Invoke(() =>
@@ -561,7 +547,7 @@ namespace MultiFileDownloader.Client
             }
         }
 
-        // ================= BUTTON =================
+        // ==================== TOOLBAR BUTTONS ====================
 
         private void SelectAll_Click(object sender, RoutedEventArgs e)
         {

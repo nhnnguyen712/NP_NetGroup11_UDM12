@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 
 namespace MultiFileDownloader.Server
@@ -7,41 +7,34 @@ namespace MultiFileDownloader.Server
     {
         static async Task Main(string[] args)
         {
-            // Lấy port từ: 
-            // 1. Command line argument (ví dụ: dotnet run 9999)
-            // 2. Environment variable (PORT=9999)
-            // 3. Default: 8888
+            // Determine port: CLI arg > env var > default 8888
             int port = 8888;
 
-            // Kiểm tra command line argument
             if (args.Length > 0 && int.TryParse(args[0], out int argPort))
             {
                 port = argPort;
-                Console.WriteLine($"[CONFIG] Port từ command line argument: {port}");
+                Console.WriteLine($"[CONFIG] Port from CLI argument: {port}");
             }
-            // Kiểm tra environment variable
             else if (int.TryParse(Environment.GetEnvironmentVariable("FILE_DOWNLOADER_PORT"), out int envPort))
             {
                 port = envPort;
-                Console.WriteLine($"[CONFIG] Port từ environment variable: {port}");
+                Console.WriteLine($"[CONFIG] Port from environment variable: {port}");
             }
             else
             {
-                Console.WriteLine($"[CONFIG] Sử dụng port mặc định: {port}");
+                Console.WriteLine($"[CONFIG] Using default port: {port}");
             }
 
-            // Kiểm tra port có hợp lệ không
+            // Validate port range
             if (port < 1 || port > 65535)
             {
-                Console.WriteLine($"❌ Port không hợp lệ: {port}");
-                Console.WriteLine($"⚠️  Port phải từ 1 đến 65535");
+                Console.WriteLine($"Invalid port: {port} (must be 1-65535)");
                 return;
             }
 
-            // Lấy IP address của server
             string serverIP = GetServerIP();
 
-            // Bind tất cả IP addresses (0.0.0.0)
+            // Bind on all interfaces (0.0.0.0)
             TcpListener server = new TcpListener(IPAddress.Any, port);
 
             try
@@ -51,46 +44,35 @@ namespace MultiFileDownloader.Server
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
             {
                 Console.WriteLine();
-               
                 Console.WriteLine("PORT ALREADY IN USE");
-                Console.WriteLine($"Port {port} đang bị chiếm bởi một ứng dụng khác!");
-                Console.WriteLine(" ");
-                Console.WriteLine("Cách giải quyết:");
-                Console.WriteLine("                                                          ");
-                Console.WriteLine($" 1️ Chạy với port khác:");
-                Console.WriteLine($"    dotnet run 9999 ");
-                Console.WriteLine("                                                          ");
-                Console.WriteLine($" 2️ Đặt environment variable:");
-                Console.WriteLine($"  SET FILE_DOWNLOADER_PORT=9999");
-                Console.WriteLine("                                                          ");
-                Console.WriteLine($" 3️ Tìm process chiếm port {port}: ");
-                Console.WriteLine("     netstat -ano | findstr :" + port);
-                Console.WriteLine("     taskkill /PID <PID> /F ");
-                Console.WriteLine("                                                          ");
-               
+                Console.WriteLine($"Port {port} is occupied by another application!");
+                Console.WriteLine();
+                Console.WriteLine("Solutions:");
+                Console.WriteLine($"  1. Use a different port:        dotnet run 9999");
+                Console.WriteLine($"  2. Set environment variable:    SET FILE_DOWNLOADER_PORT=9999");
+                Console.WriteLine($"  3. Find process using port:     netstat -ano | findstr :{port}");
+                Console.WriteLine($"     Then kill it:                taskkill /PID <PID> /F");
+                Console.WriteLine();
                 return;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Lỗi khi start server: {ex.Message}");
+                Console.WriteLine($"Error starting server: {ex.Message}");
                 return;
             }
 
-            // In thông tin server đẹp
+            // Display startup banner
             Console.Clear();
-
-            Console.WriteLine("        🔗 Multi File Downloader Server                    ");
-            Console.WriteLine("        ");
-            Console.WriteLine($"Server IP (Localhost): 127.0.0.1:{port}".PadRight(60) + "");
-            Console.WriteLine($"Server IP (Network):   {serverIP}:{port}".PadRight(60) + "");
-            Console.WriteLine("                                                           ");
-            Console.WriteLine("Files Location: ./files                               ");
-            Console.WriteLine("Started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss").PadRight(41) + "");
-            Console.WriteLine("                                                         ");
-            Console.WriteLine("Stop server: Ctrl+C                             ");
-
+            Console.WriteLine("  Multi File Downloader Server");
+            Console.WriteLine("  ----------------------------");
+            Console.WriteLine($"  Localhost : 127.0.0.1:{port}");
+            Console.WriteLine($"  Network   : {serverIP}:{port}");
+            Console.WriteLine($"  Files     : ./files");
+            Console.WriteLine($"  Started   : {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"  Stop      : Ctrl+C");
             Console.WriteLine();
 
+            // Accept client connections
             int clientCount = 0;
 
             while (true)
@@ -99,13 +81,14 @@ namespace MultiFileDownloader.Server
                 clientCount++;
 
                 string clientIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]  Client #{clientCount} connected from {clientIP}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Client #{clientCount} connected from {clientIP}");
 
+                // Handle each client on a separate task
                 _ = Task.Run(() => ClientHandler.Handle(client));
             }
         }
 
-        // Hàm lấy IP address của server
+        // Resolve the server's LAN IP address (prefer IPv4)
         static string GetServerIP()
         {
             try
@@ -116,17 +99,13 @@ namespace MultiFileDownloader.Server
                 foreach (var address in addresses)
                 {
                     if (address.AddressFamily == AddressFamily.InterNetwork)
-                    {
                         return address.ToString();
-                    }
                 }
 
                 foreach (var address in addresses)
                 {
                     if (address.AddressFamily == AddressFamily.InterNetworkV6)
-                    {
                         return address.ToString();
-                    }
                 }
 
                 return "Unable to determine IP";

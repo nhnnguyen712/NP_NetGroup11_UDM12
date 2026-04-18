@@ -1,9 +1,10 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
 using System.Text;
 using MultiFileDownloader.Shared;
 
 namespace MultiFileDownloader.Client
 {
+    // Manages TCP connection to the server for file listing and downloading
     public class NetworkClient
     {
         TcpClient client;
@@ -11,13 +12,13 @@ namespace MultiFileDownloader.Client
         private string serverHost = "127.0.0.1";
         private int serverPort = 8888;
 
-        // Constructor để set server address
         public NetworkClient(string host = "127.0.0.1", int port = 8888)
         {
             serverHost = host;
             serverPort = port;
         }
 
+        // Create a dedicated TCP connection for a single download
         public async Task<TcpClient> CreateNewConnection()
         {
             TcpClient client = new TcpClient();
@@ -27,6 +28,7 @@ namespace MultiFileDownloader.Client
             return client;
         }
 
+        // Send download request on a specific stream
         public async Task SendDownloadRequest(NetworkStream stream, string file)
         {
             byte[] payload = Encoding.UTF8.GetBytes(file);
@@ -39,6 +41,7 @@ namespace MultiFileDownloader.Client
             await stream.WriteAsync(packet);
         }
 
+        // Establish the primary control connection
         public async Task Connect()
         {
             client = new TcpClient();
@@ -48,6 +51,7 @@ namespace MultiFileDownloader.Client
             stream = client.GetStream();
         }
 
+        // Request file list from server
         public async Task RequestFileList()
         {
             byte[] packet =
@@ -58,6 +62,7 @@ namespace MultiFileDownloader.Client
             await stream.WriteAsync(packet);
         }
 
+        // Receive and parse pipe-delimited file list
         public async Task<string[]> ReceiveFileList()
         {
             byte[] header =
@@ -73,6 +78,7 @@ namespace MultiFileDownloader.Client
             return list.Split('|');
         }
 
+        // Send download request on the control stream
         public async Task RequestDownload(string file)
         {
             byte[] payload = Encoding.UTF8.GetBytes(file);

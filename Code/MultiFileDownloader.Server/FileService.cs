@@ -20,6 +20,9 @@ namespace MultiFileDownloader.Server
             }
         }
 
+        // Call this method on startup to trigger the static constructor immediately
+        public static void Initialize() { }
+
         // Send pipe-delimited file list to client
         public static async Task SendFileList(NetworkStream stream)
         {

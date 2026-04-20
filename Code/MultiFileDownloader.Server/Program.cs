@@ -7,6 +7,9 @@ namespace MultiFileDownloader.Server
     {
         static async Task Main(string[] args)
         {
+            // Initialize FileService to ensure 'files' folder is created immediately on startup
+            FileService.Initialize();
+
             // Determine port: CLI arg > env var > default 8888
             int port = 8888;
 
